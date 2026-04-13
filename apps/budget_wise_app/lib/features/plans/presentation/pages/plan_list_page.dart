@@ -105,12 +105,7 @@ class _PlanListView extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'planListFab',
-        backgroundColor: const Color(0xFF4D648D),
-        onPressed: () => _navigateToCreatePlan(context),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+
     );
   }
 

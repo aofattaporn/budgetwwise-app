@@ -57,11 +57,6 @@ class _MainAppShellState extends State<MainAppShell> {
     });
   }
 
-  void _onFabPressed() {
-    // TODO: Implement FAB action (e.g., add new transaction, plan item, etc.)
-    debugPrint('FAB pressed - implement action');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,11 +80,6 @@ class _MainAppShellState extends State<MainAppShell> {
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
       ),
-      floatingActionButton: AppFloatingActionButton(
-        onPressed: _onFabPressed,
-        tooltip: 'Add new item',
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

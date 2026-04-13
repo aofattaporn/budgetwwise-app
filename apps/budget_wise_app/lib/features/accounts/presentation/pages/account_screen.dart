@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/account.dart';
 import '../bloc/account_bloc.dart';
+import '../widgets/dashed_border_painter.dart';
 import 'account_create_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -18,16 +19,19 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @override
   void initState() {
     super.initState();
-    // Fetch accounts on screen load
     context.read<AccountBloc>().add(const FetchAccountsRequested());
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Navigation Methods
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NAVIGATION METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   /// Navigate to create account screen
   Future<void> _navigateToCreateAccount() async {
@@ -66,7 +70,10 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  /// Show account options menu
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DIALOG METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   void _showAccountMenu(Account account) {
     showModalBottomSheet(
       context: context,
@@ -114,7 +121,6 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Show delete confirmation dialog
   Future<void> _showDeleteConfirmation(Account account) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -150,9 +156,9 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Build Methods
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD - MAIN
+  // ═══════════════════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
@@ -163,11 +169,13 @@ class _AccountScreenState extends State<AccountScreen> {
         listener: _handleStateChanges,
         builder: (context, state) => _buildBody(state),
       ),
-      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
-  /// Build app bar
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD - STATES
+  // ═══════════════════════════════════════════════════════════════════════════
+
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF4D648D),
@@ -188,23 +196,12 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Build floating action button
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      backgroundColor: const Color(0xFF4D648D),
-      onPressed: _navigateToCreateAccount,
-      child: const Icon(Icons.add, color: Colors.white),
-    );
-  }
-
-  /// Handle state changes (errors, success messages)
   void _handleStateChanges(BuildContext context, AccountState state) {
     if (state is AccountError) {
       context.showSnackBar(state.message, isError: true);
     }
   }
 
-  /// Build body based on current state
   Widget _buildBody(AccountState state) {
     if (state is AccountLoading) {
       return const Center(
@@ -215,9 +212,6 @@ class _AccountScreenState extends State<AccountScreen> {
     }
 
     if (state is AccountLoaded) {
-      if (state.isEmpty) {
-        return _buildEmptyState();
-      }
       return _buildAccountsList(state);
     }
 
@@ -229,78 +223,6 @@ class _AccountScreenState extends State<AccountScreen> {
     return const SizedBox.shrink();
   }
 
-  /// Build empty state widget
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_outlined,
-                size: 64,
-                color: Colors.grey[400],
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Title
-            const Text(
-              'No Accounts Yet',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            
-            // Description
-            Text(
-              'Create your first account to start\ntracking your finances',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Create button
-            ElevatedButton.icon(
-              onPressed: _navigateToCreateAccount,
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Create Account'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4D648D),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Build error state widget
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
@@ -349,7 +271,10 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Build accounts list with summary
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD - ACCOUNT LIST CONTENT
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Widget _buildAccountsList(AccountLoaded state) {
     final currencyFormat = NumberFormat.currency(symbol: '฿', decimalDigits: 0);
 
@@ -372,16 +297,12 @@ class _AccountScreenState extends State<AccountScreen> {
             
             // Add account button
             _buildAddAccountButton(),
-            
-            // Bottom padding for FAB
-            const SizedBox(height: 80),
           ],
         ),
       ),
     );
   }
 
-  /// Build total balance summary card
   Widget _buildTotalBalanceSummary(
     AccountLoaded state,
     NumberFormat currencyFormat,
@@ -435,7 +356,6 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Build section header
   Widget _buildSectionHeader(int count) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -459,8 +379,38 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Build accounts list view
   Widget _buildAccountsListView(List<Account> accounts) {
+    if (accounts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No accounts yet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add an account to start tracking your finances',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -478,7 +428,6 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Build add account button
   Widget _buildAddAccountButton() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -486,7 +435,7 @@ class _AccountScreenState extends State<AccountScreen> {
         onTap: _navigateToCreateAccount,
         borderRadius: BorderRadius.circular(8),
         child: CustomPaint(
-          painter: _DashedBorderPainter(
+          painter: DashedBorderPainter(
             color: const Color(0xFFD4D4D4),
             strokeWidth: 2,
             borderRadius: 8,
@@ -678,77 +627,4 @@ class _AccountCard extends StatelessWidget {
   }
 }
 
-/// ═══════════════════════════════════════════════════════════════════════════
-/// Dashed Border Painter - Custom painter for dashed borders
-/// ═══════════════════════════════════════════════════════════════════════════
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double borderRadius;
-  final double dashWidth;
-  final double dashSpace;
 
-  _DashedBorderPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.borderRadius,
-    this.dashWidth = 5,
-    this.dashSpace = 3,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          Radius.circular(borderRadius),
-        ),
-      );
-
-    final dashPath = _createDashedPath(path);
-    canvas.drawPath(dashPath, paint);
-  }
-
-  Path _createDashedPath(Path source) {
-    final dashedPath = Path();
-    final metricsIterator = source.computeMetrics().iterator;
-
-    while (metricsIterator.moveNext()) {
-      final metric = metricsIterator.current;
-      double distance = 0;
-      bool draw = true;
-
-      while (distance < metric.length) {
-        final segmentLength = draw ? dashWidth : dashSpace;
-        final end = (distance + segmentLength).clamp(0.0, metric.length);
-
-        if (draw) {
-          dashedPath.addPath(
-            metric.extractPath(distance, end),
-            Offset.zero,
-          );
-        }
-
-        distance = end;
-        draw = !draw;
-      }
-    }
-
-    return dashedPath;
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.borderRadius != borderRadius ||
-        oldDelegate.dashWidth != dashWidth ||
-        oldDelegate.dashSpace != dashSpace;
-  }
-}

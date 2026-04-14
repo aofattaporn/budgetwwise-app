@@ -48,8 +48,12 @@ class _MainAppShellState extends State<MainAppShell> {
     );
     _activePlanBloc = ActivePlanBloc(
       planRepository: getIt<PlanRepository>(),
+      transactionRepository: getIt<TransactionRepository>(),
     );
-    _accountBloc = AccountBloc(repository: getIt<AccountRepository>());
+    _accountBloc = AccountBloc(
+      repository: getIt<AccountRepository>(),
+      transactionRepository: getIt<TransactionRepository>(),
+    );
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../domain/entities/plan.dart';
 import '../../../../domain/entities/plan_item.dart';
 import '../../../../domain/repositories/plan_repository.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 
 part 'active_plan_event.dart';
 part 'active_plan_state.dart';
@@ -11,10 +12,13 @@ part 'active_plan_state.dart';
 /// BLoC for managing active plan state
 class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
   final PlanRepository _planRepository;
+  final TransactionRepository _transactionRepository;
 
   ActivePlanBloc({
     required PlanRepository planRepository,
+    required TransactionRepository transactionRepository,
   })  : _planRepository = planRepository,
+        _transactionRepository = transactionRepository,
         super(const ActivePlanState()) {
     on<LoadActivePlan>(_onLoadActivePlan);
     on<RefreshActivePlan>(_onRefreshActivePlan);
@@ -149,6 +153,19 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
     Emitter<ActivePlanState> emit,
   ) async {
     try {
+      // Check if any transactions reference this plan item
+      final txnCount = await _transactionRepository.countByPlanItemId(event.itemId);
+      if (txnCount > 0) {
+        emit(state.copyWith(
+          status: ActivePlanStatus.error,
+          errorMessage:
+              'Cannot delete — $txnCount ${txnCount == 1 ? 'transaction is' : 'transactions are'} linked. Remove or reassign them first.',
+        ));
+        // Restore to loaded so UI isn't stuck on error
+        emit(state.copyWith(status: ActivePlanStatus.loaded));
+        return;
+      }
+
       await _planRepository.deletePlanItem(event.itemId);
 
       emit(state.copyWith(

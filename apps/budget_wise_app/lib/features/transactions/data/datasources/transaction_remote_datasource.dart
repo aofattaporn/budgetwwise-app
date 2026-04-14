@@ -92,4 +92,30 @@ class TransactionRemoteDataSource {
       throw Exception('Failed to fetch recent transactions: $e');
     }
   }
+
+  /// Count transactions linked to a specific account
+  Future<int> countByAccountId(String accountId) async {
+    try {
+      final response = await client
+          .from(_tableName)
+          .select('id')
+          .eq('account_id', accountId);
+      return (response as List).length;
+    } catch (e) {
+      throw Exception('Failed to count transactions by account: $e');
+    }
+  }
+
+  /// Count transactions linked to a specific plan item
+  Future<int> countByPlanItemId(String planItemId) async {
+    try {
+      final response = await client
+          .from(_tableName)
+          .select('id')
+          .eq('plan_item_id', planItemId);
+      return (response as List).length;
+    } catch (e) {
+      throw Exception('Failed to count transactions by plan item: $e');
+    }
+  }
 }

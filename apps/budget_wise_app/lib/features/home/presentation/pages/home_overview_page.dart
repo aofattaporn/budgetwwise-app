@@ -409,7 +409,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     final spent = state.totalActualExpenses;
     final budget = state.totalPlannedExpenses;
     final remaining = state.remainingBudget;
-    final progress = budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0;
+    final progress = budget > 0 ? (remaining / budget).clamp(0.0, 1.0) : 0.0;
 
     return Container(
       width: double.infinity,
@@ -493,7 +493,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
               minHeight: 6,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
-                progress > 0.85 ? Colors.red[300]! : Colors.white,
+                progress < 0.15 ? Colors.red[300]! : Colors.white,
               ),
             ),
           ),

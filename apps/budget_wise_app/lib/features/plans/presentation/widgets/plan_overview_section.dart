@@ -210,20 +210,15 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
   }
 
   Widget _buildProgressBar() {
-    return Container(
-      height: 12,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: FractionallySizedBox(
-        alignment: Alignment.centerLeft,
-        widthFactor: _percentageLeft / 100,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
+    final progress = (_percentageLeft / 100).clamp(0.0, 1.0);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: LinearProgressIndicator(
+        value: progress,
+        minHeight: 6,
+        backgroundColor: Colors.white.withOpacity(0.2),
+        valueColor: AlwaysStoppedAnimation<Color>(
+          progress < 0.15 ? Colors.red.shade300 : Colors.white,
         ),
       ),
     );

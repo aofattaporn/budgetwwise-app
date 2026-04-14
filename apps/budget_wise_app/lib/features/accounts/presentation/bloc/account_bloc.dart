@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 
 part 'account_event.dart';
 part 'account_state.dart';
@@ -12,10 +13,13 @@ part 'account_state.dart';
 /// ═══════════════════════════════════════════════════════════════════════════
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
   final AccountRepository _repository;
+  final TransactionRepository _transactionRepository;
 
   AccountBloc({
     required AccountRepository repository,
+    required TransactionRepository transactionRepository,
   })  : _repository = repository,
+        _transactionRepository = transactionRepository,
         super(const AccountInitial()) {
     // Register event handlers
     on<FetchAccountsRequested>(_onFetchAccounts);
@@ -109,6 +113,24 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     DeleteAccountRequested event,
     Emitter<AccountState> emit,
   ) async {
+    // Check if any transactions reference this account
+    try {
+      final txnCount = await _transactionRepository.countByAccountId(event.accountId);
+      if (txnCount > 0) {
+        emit(AccountError(
+          'Cannot delete — $txnCount ${txnCount == 1 ? 'transaction is' : 'transactions are'} linked. Delete them first.',
+        ));
+        // Re-fetch accounts so UI returns to loaded state
+        final accounts = await _repository.getAccounts();
+        final totalBalance = _calculateTotalBalance(accounts);
+        emit(AccountLoaded(accounts: accounts, totalBalance: totalBalance));
+        return;
+      }
+    } catch (e) {
+      emit(AccountError('Failed to check transactions: ${e.toString()}'));
+      return;
+    }
+
     emit(const AccountLoading());
 
     try {

@@ -6,4 +6,6 @@ abstract class TransactionRepository {
   Future<Transaction> createTransaction(Transaction transaction);
   Future<Transaction> updateTransaction(Transaction transaction);
   Future<void> deleteTransaction(String id);
+  Future<int> countByAccountId(String accountId);
+  Future<int> countByPlanItemId(String planItemId);
 }

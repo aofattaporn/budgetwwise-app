@@ -38,4 +38,14 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<void> deleteTransaction(String id) async {
     await remote.deleteTransaction(id);
   }
+
+  @override
+  Future<int> countByAccountId(String accountId) async {
+    return await remote.countByAccountId(accountId);
+  }
+
+  @override
+  Future<int> countByPlanItemId(String planItemId) async {
+    return await remote.countByPlanItemId(planItemId);
+  }
 }

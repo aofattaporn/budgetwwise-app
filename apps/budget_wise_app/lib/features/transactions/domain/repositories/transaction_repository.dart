@@ -8,4 +8,8 @@ abstract class TransactionRepository {
   Future<void> deleteTransaction(String id);
   Future<int> countByAccountId(String accountId);
   Future<int> countByPlanItemId(String planItemId);
+  Future<List<Transaction>> getTransactionsByDateRange({
+    required DateTime start,
+    required DateTime end,
+  });
 }

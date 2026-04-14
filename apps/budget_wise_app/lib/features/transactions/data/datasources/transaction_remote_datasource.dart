@@ -118,4 +118,25 @@ class TransactionRemoteDataSource {
       throw Exception('Failed to count transactions by plan item: $e');
     }
   }
+
+  /// Fetch transactions within a date range
+  Future<List<TransactionModel>> fetchByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    try {
+      final response = await client
+          .from(_tableName)
+          .select()
+          .gte('occurred_at', start.toIso8601String())
+          .lte('occurred_at', end.toIso8601String())
+          .order('occurred_at', ascending: false);
+
+      return (response as List)
+          .map((json) => TransactionModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch transactions by date range: $e');
+    }
+  }
 }

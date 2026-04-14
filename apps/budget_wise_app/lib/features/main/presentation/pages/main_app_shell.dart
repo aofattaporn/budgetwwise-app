@@ -12,6 +12,8 @@ import '../../../home/presentation/pages/home_overview_page.dart';
 import '../../../plans/presentation/bloc/active_plan_bloc.dart';
 import '../../../plans/presentation/pages/active_plan_page.dart';
 import '../../../transactions/transactions.dart';
+import '../../../transactions/presentation/bloc/transaction_history_bloc.dart';
+import '../../../transactions/presentation/pages/transaction_history_page.dart';
 import '../../../accounts/accounts.dart';
 import '../../../settings/settings.dart';
 
@@ -37,6 +39,7 @@ class _MainAppShellState extends State<MainAppShell> {
   late final HomeBloc _homeBloc;
   late final ActivePlanBloc _activePlanBloc;
   late final AccountBloc _accountBloc;
+  late final TransactionHistoryBloc _transactionHistoryBloc;
 
   @override
   void initState() {
@@ -54,6 +57,9 @@ class _MainAppShellState extends State<MainAppShell> {
       repository: getIt<AccountRepository>(),
       transactionRepository: getIt<TransactionRepository>(),
     );
+    _transactionHistoryBloc = TransactionHistoryBloc(
+      repository: getIt<TransactionRepository>(),
+    );
   }
 
   @override
@@ -61,6 +67,7 @@ class _MainAppShellState extends State<MainAppShell> {
     _homeBloc.close();
     _activePlanBloc.close();
     _accountBloc.close();
+    _transactionHistoryBloc.close();
     _processingNotifier.dispose();
     super.dispose();
   }
@@ -81,6 +88,9 @@ class _MainAppShellState extends State<MainAppShell> {
       case 1:
         _activePlanBloc.add(const RefreshActivePlan());
         break;
+      case 2:
+        _transactionHistoryBloc.add(const RefreshTransactionHistory());
+        break;
       case 3:
         _accountBloc.add(const RefreshAccountsRequested());
         break;
@@ -91,6 +101,7 @@ class _MainAppShellState extends State<MainAppShell> {
     _homeBloc.add(const RefreshHomeData());
     _activePlanBloc.add(const RefreshActivePlan());
     _accountBloc.add(const RefreshAccountsRequested());
+    _transactionHistoryBloc.add(const RefreshTransactionHistory());
   }
 
   @override
@@ -100,6 +111,7 @@ class _MainAppShellState extends State<MainAppShell> {
         BlocProvider.value(value: _homeBloc),
         BlocProvider.value(value: _activePlanBloc),
         BlocProvider.value(value: _accountBloc),
+        BlocProvider.value(value: _transactionHistoryBloc),
       ],
       child: ProcessingOverlay(
         notifier: _processingNotifier,
@@ -109,7 +121,7 @@ class _MainAppShellState extends State<MainAppShell> {
             children: [
               const HomeOverviewPage(),
               const ActivePlanPage(),
-              const TransactionsPlaceholderPage(),
+              const TransactionHistoryPage(),
               const AccountScreen(),
               const SettingsPlaceholderPage(),
             ],

@@ -13,6 +13,7 @@ import '../../../accounts/presentation/bloc/account_bloc.dart';
 import '../../../plans/presentation/bloc/active_plan_bloc.dart';
 import '../../../main/presentation/pages/main_app_shell.dart';
 import '../../../transactions/transactions.dart';
+import '../../../transactions/presentation/bloc/transaction_history_bloc.dart';
 import '../bloc/home_bloc.dart';
 
 /// Home Overview Page - Main dashboard showing financial summary
@@ -259,6 +260,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     _refreshData();
     context.read<AccountBloc>().add(const RefreshAccountsRequested());
     context.read<ActivePlanBloc>().add(const RefreshActivePlan());
+    context.read<TransactionHistoryBloc>().add(const RefreshTransactionHistory());
   }
 
   void _handleStateChanges(BuildContext context, HomeState state) {

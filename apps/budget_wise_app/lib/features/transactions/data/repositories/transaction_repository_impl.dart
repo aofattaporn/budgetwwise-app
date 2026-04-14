@@ -48,4 +48,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<int> countByPlanItemId(String planItemId) async {
     return await remote.countByPlanItemId(planItemId);
   }
+
+  @override
+  Future<List<Transaction>> getTransactionsByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final models = await remote.fetchByDateRange(start: start, end: end);
+    return models.map((e) => e.toEntity()).toList();
+  }
 }

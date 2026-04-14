@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../di/injection.dart';
 import '../../../../domain/repositories/plan_repository.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
 import '../../../accounts/presentation/bloc/account_bloc.dart';
 import '../../../plans/presentation/bloc/active_plan_bloc.dart';
+import '../../../main/presentation/pages/main_app_shell.dart';
 import '../../../transactions/transactions.dart';
 import '../bloc/home_bloc.dart';
 
@@ -31,6 +33,27 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   // LIFECYCLE
   // ═══════════════════════════════════════════════════════════════════════════
+
+  void _setProcessing(bool value) {
+    final overlay = ProcessingOverlay.of(context);
+    if (value) {
+      overlay?.show();
+    } else {
+      overlay?.hide();
+    }
+  }
+
+  /// Wait for the HomeBloc to finish refreshing before hiding overlay
+  Future<void> _waitForRefreshComplete() async {
+    final bloc = context.read<HomeBloc>();
+    // Wait for the bloc to emit a non-loading state (loaded/error)
+    await bloc.stream.firstWhere(
+      (s) => s.status == HomeStatus.loaded || s.status == HomeStatus.error,
+    ).timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => bloc.state,
+    );
+  }
 
   @override
   void initState() {
@@ -85,10 +108,157 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     );
 
     if (result == true && mounted) {
-      _refreshData();
-      context.read<AccountBloc>().add(const RefreshAccountsRequested());
-      context.read<ActivePlanBloc>().add(const RefreshActivePlan());
+      _setProcessing(true);
+      _refreshAllScreens();
+      await _waitForRefreshComplete();
+      if (mounted) _setProcessing(false);
     }
+  }
+
+  Future<void> _navigateToEditTransaction(Transaction transaction) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => TransactionEditorBloc(
+            transactionRepository: getIt<TransactionRepository>(),
+            accountRepository: getIt<AccountRepository>(),
+            planRepository: getIt<PlanRepository>(),
+          ),
+          child: TransactionEditorPage(transaction: transaction),
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result == true && mounted) {
+      _setProcessing(true);
+      _refreshAllScreens();
+      await _waitForRefreshComplete();
+      if (mounted) _setProcessing(false);
+    }
+  }
+
+  void _showTransactionActionSheet(Transaction txn) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    txn.description ?? txn.type.name[0].toUpperCase() + txn.type.name.substring(1),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined, color: Color(0xFF4D648D)),
+                  title: const Text('Edit Transaction'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _navigateToEditTransaction(txn);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: Colors.red[400]),
+                  title: Text('Delete Transaction', style: TextStyle(color: Colors.red[400])),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _confirmDeleteTransaction(txn);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteTransaction(Transaction txn) async {
+    final confirmed = await ConfirmDialog.show(
+      context: context,
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction? '
+          'The account balance will be reverted.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+
+    if (!confirmed || !mounted) return;
+
+    _setProcessing(true);
+
+    try {
+      // Reverse balance impact
+      final accountRepo = getIt<AccountRepository>();
+      final accounts = await accountRepo.getAccounts();
+      final account = accounts.firstWhere((a) => a.id == txn.accountId);
+
+      switch (txn.type) {
+        case TransactionType.expense:
+          await accountRepo.updateAccount(
+            account.copyWith(balance: account.balance + txn.amount),
+          );
+          break;
+        case TransactionType.income:
+          await accountRepo.updateAccount(
+            account.copyWith(balance: account.balance - txn.amount),
+          );
+          break;
+        case TransactionType.transfer:
+          await accountRepo.updateAccount(
+            account.copyWith(balance: account.balance + txn.amount),
+          );
+          break;
+      }
+
+      // Delete the transaction
+      await getIt<TransactionRepository>().deleteTransaction(txn.id);
+
+      // Invalidate plan cache so actuals are recomputed
+      getIt<PlanRepository>().invalidateCache();
+
+      if (mounted) {
+        context.showSnackBar('Transaction deleted');
+        _refreshAllScreens();
+        await _waitForRefreshComplete();
+        if (mounted) _setProcessing(false);
+      }
+    } catch (e) {
+      _setProcessing(false);
+      if (mounted) {
+        context.showSnackBar('Failed to delete transaction: $e', isError: true);
+      }
+    }
+  }
+
+  void _refreshAllScreens() {
+    _refreshData();
+    context.read<AccountBloc>().add(const RefreshAccountsRequested());
+    context.read<ActivePlanBloc>().add(const RefreshActivePlan());
   }
 
   void _handleStateChanges(BuildContext context, HomeState state) {
@@ -650,7 +820,9 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
             ? Colors.green[600]
             : const Color(0xFF171717);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showTransactionActionSheet(txn),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -708,6 +880,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

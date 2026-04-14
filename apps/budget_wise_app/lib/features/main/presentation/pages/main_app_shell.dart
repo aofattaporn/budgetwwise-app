@@ -33,6 +33,7 @@ class MainAppShell extends StatefulWidget {
 
 class _MainAppShellState extends State<MainAppShell> {
   int _currentIndex = 0; // Default to Home tab (index 0)
+  final ValueNotifier<bool> _processingNotifier = ValueNotifier(false);
   late final HomeBloc _homeBloc;
   late final ActivePlanBloc _activePlanBloc;
   late final AccountBloc _accountBloc;
@@ -56,6 +57,7 @@ class _MainAppShellState extends State<MainAppShell> {
     _homeBloc.close();
     _activePlanBloc.close();
     _accountBloc.close();
+    _processingNotifier.dispose();
     super.dispose();
   }
 
@@ -95,22 +97,97 @@ class _MainAppShellState extends State<MainAppShell> {
         BlocProvider.value(value: _activePlanBloc),
         BlocProvider.value(value: _accountBloc),
       ],
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            const HomeOverviewPage(),
-            const ActivePlanPage(),
-            const TransactionsPlaceholderPage(),
-            const AccountScreen(),
-            const SettingsPlaceholderPage(),
-          ],
-        ),
-        bottomNavigationBar: AppBottomNavBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
+      child: ProcessingOverlay(
+        notifier: _processingNotifier,
+        child: Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: [
+              const HomeOverviewPage(),
+              const ActivePlanPage(),
+              const TransactionsPlaceholderPage(),
+              const AccountScreen(),
+              const SettingsPlaceholderPage(),
+            ],
+          ),
+          bottomNavigationBar: AppBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Provides a global processing overlay that covers all screens.
+/// Child widgets can access via [ProcessingOverlay.of(context)].
+class ProcessingOverlay extends InheritedWidget {
+  final ValueNotifier<bool> notifier;
+
+  const ProcessingOverlay({
+    super.key,
+    required this.notifier,
+    required super.child,
+  });
+
+  static ProcessingOverlay? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<ProcessingOverlay>();
+  }
+
+  void show() => notifier.value = true;
+  void hide() => notifier.value = false;
+
+  @override
+  bool updateShouldNotify(ProcessingOverlay oldWidget) =>
+      notifier != oldWidget.notifier;
+
+  @override
+  ProcessingOverlayElement createElement() => ProcessingOverlayElement(this);
+}
+
+class ProcessingOverlayElement extends InheritedElement {
+  ProcessingOverlayElement(ProcessingOverlay super.widget);
+
+  @override
+  Widget build() {
+    final overlay = widget as ProcessingOverlay;
+    return ValueListenableBuilder<bool>(
+      valueListenable: overlay.notifier,
+      builder: (context, isProcessing, _) {
+        return Stack(
+          children: [
+            overlay.child,
+            if (isProcessing)
+              Container(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: const Center(
+                  child: Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: Color(0xFF4D648D)),
+                          SizedBox(height: 16),
+                          Text(
+                            'Updating data...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

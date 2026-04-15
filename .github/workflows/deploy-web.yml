@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Build web
         working-directory: apps/budget_wise_app
-        run: flutter build web --release --base-href "/budgetwwise-app/"
+        run: flutter build web --release --base-href "/flutter-app-template-/"
 
       - name: Copy 404.html for SPA routing
         run: cp apps/budget_wise_app/build/web/index.html apps/budget_wise_app/build/web/404.html

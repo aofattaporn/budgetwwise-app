@@ -32,7 +32,7 @@ jobs:
 
       - name: Analyze
         working-directory: apps/budget_wise_app
-        run: dart analyze lib --fatal-infos=false --fatal-warnings
+        run: dart analyze lib --no-fatal-infos --fatal-warnings
 
       - name: Test
         working-directory: apps/budget_wise_app

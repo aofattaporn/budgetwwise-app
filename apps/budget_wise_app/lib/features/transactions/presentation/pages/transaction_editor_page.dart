@@ -115,7 +115,12 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
           const SizedBox(height: 24),
           _buildAccountSelector(state),
           const SizedBox(height: 24),
-          if (state.type == TransactionType.expense) ...[
+          if (state.type == TransactionType.transfer) ...[  
+            _buildDestinationAccountSelector(state),
+            const SizedBox(height: 24),
+          ],
+          if (state.type == TransactionType.expense ||
+              state.type == TransactionType.income) ...[
             _buildPlanItemSelector(state),
             const SizedBox(height: 24),
           ],
@@ -315,6 +320,74 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD - DESTINATION ACCOUNT SELECTOR (Transfer)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildDestinationAccountSelector(TransactionEditorState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('To Account', style: AppStyles.label),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => _showDestinationAccountPicker(state),
+          child: Container(
+            padding: const EdgeInsets.all(AppDimens.cardPadding),
+            decoration: AppStyles.card,
+            child: Row(
+              children: [
+                AppStyles.iconBox(icon: Icons.account_balance_wallet, size: 36),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.selectedDestinationAccount?.name ?? 'Select Destination Account',
+                        style: state.selectedDestinationAccount != null ? AppStyles.bodyLarge : AppStyles.bodySmall,
+                      ),
+                      if (state.selectedDestinationAccount != null)
+                        Text(
+                          'Balance: ${CurrencyUtils.formatCurrency(state.selectedDestinationAccount!.balance)}',
+                          style: AppStyles.caption,
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDestinationAccountPicker(TransactionEditorState state) {
+    // Exclude the source account from destination options
+    final availableAccounts = state.accounts
+        .where((a) => a.id != state.selectedAccountId)
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => _AccountPickerSheet(
+        accounts: availableAccounts,
+        selectedId: state.selectedDestinationAccountId,
+        onSelected: (id) {
+          context
+              .read<TransactionEditorBloc>()
+              .add(TransactionDestinationAccountChanged(id));
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // BUILD - PLAN ITEM SELECTOR
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -360,7 +433,12 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
           ),
         ),
         const SizedBox(height: 8),
-        Text('Plan items help you track spending against your plan.', style: AppStyles.caption),
+        Text(
+          state.type == TransactionType.income
+              ? 'Link income to a plan budget item.'
+              : 'Plan items help you track spending against your plan.',
+          style: AppStyles.caption,
+        ),
       ],
     );
   }

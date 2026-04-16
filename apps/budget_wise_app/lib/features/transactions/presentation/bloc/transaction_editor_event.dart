@@ -43,6 +43,15 @@ class TransactionAccountChanged extends TransactionEditorEvent {
   List<Object?> get props => [accountId];
 }
 
+class TransactionDestinationAccountChanged extends TransactionEditorEvent {
+  final String accountId;
+
+  const TransactionDestinationAccountChanged(this.accountId);
+
+  @override
+  List<Object?> get props => [accountId];
+}
+
 class TransactionPlanItemChanged extends TransactionEditorEvent {
   final String planItemId;
 

@@ -30,6 +30,7 @@ class TransactionEditorBloc
     on<TransactionTypeChanged>(_onTypeChanged);
     on<TransactionAmountChanged>(_onAmountChanged);
     on<TransactionAccountChanged>(_onAccountChanged);
+    on<TransactionDestinationAccountChanged>(_onDestinationAccountChanged);
     on<TransactionPlanItemChanged>(_onPlanItemChanged);
     on<TransactionDateChanged>(_onDateChanged);
     on<TransactionTimeChanged>(_onTimeChanged);
@@ -60,6 +61,7 @@ class TransactionEditorBloc
           type: txn.type,
           amount: txn.amount.toString(),
           selectedAccountId: txn.accountId,
+          selectedDestinationAccountId: txn.destinationAccountId ?? '',
           selectedPlanItemId: txn.planItemId,
           occurredAt: txn.occurredAt,
           description: txn.description ?? '',
@@ -90,8 +92,10 @@ class TransactionEditorBloc
   ) {
     emit(state.copyWith(
       type: event.type,
-      // Clear plan item if switching to non-expense
-      selectedPlanItemId: event.type != TransactionType.expense ? '' : null,
+      // Clear plan item if switching to transfer
+      selectedPlanItemId: event.type == TransactionType.transfer ? '' : null,
+      // Clear destination account if switching away from transfer
+      selectedDestinationAccountId: event.type != TransactionType.transfer ? '' : null,
     ));
   }
 
@@ -107,6 +111,13 @@ class TransactionEditorBloc
     Emitter<TransactionEditorState> emit,
   ) {
     emit(state.copyWith(selectedAccountId: event.accountId));
+  }
+
+  void _onDestinationAccountChanged(
+    TransactionDestinationAccountChanged event,
+    Emitter<TransactionEditorState> emit,
+  ) {
+    emit(state.copyWith(selectedDestinationAccountId: event.accountId));
   }
 
   void _onPlanItemChanged(
@@ -177,12 +188,35 @@ class TransactionEditorBloc
       return;
     }
 
+    if (state.type == TransactionType.transfer &&
+        state.selectedDestinationAccountId.isEmpty) {
+      emit(state.copyWith(
+        status: TransactionEditorStatus.error,
+        errorMessage: 'Please select a destination account',
+      ));
+      emit(state.copyWith(status: TransactionEditorStatus.ready));
+      return;
+    }
+
+    if (state.type == TransactionType.transfer &&
+        state.selectedAccountId == state.selectedDestinationAccountId) {
+      emit(state.copyWith(
+        status: TransactionEditorStatus.error,
+        errorMessage: 'Source and destination accounts must be different',
+      ));
+      emit(state.copyWith(status: TransactionEditorStatus.ready));
+      return;
+    }
+
     emit(state.copyWith(status: TransactionEditorStatus.saving));
 
     try {
       final transaction = Transaction(
         id: state.isEditing ? state.existingTransaction!.id : '',
         accountId: state.selectedAccountId,
+        destinationAccountId: state.type == TransactionType.transfer
+            ? state.selectedDestinationAccountId
+            : null,
         planItemId: state.selectedPlanItemId.isNotEmpty
             ? state.selectedPlanItemId
             : null,
@@ -241,10 +275,16 @@ class TransactionEditorBloc
         );
         break;
       case TransactionType.transfer:
-        // BR-TXN-EDIT-04: Deduct from source
+        // BR-TXN-EDIT-04: Deduct from source, add to destination
         await _accountRepository.updateAccount(
           account.copyWith(balance: account.balance - txn.amount),
         );
+        if (txn.destinationAccountId != null) {
+          final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
+          await _accountRepository.updateAccount(
+            destAccount.copyWith(balance: destAccount.balance + txn.amount),
+          );
+        }
         break;
     }
   }
@@ -268,10 +308,16 @@ class TransactionEditorBloc
         );
         break;
       case TransactionType.transfer:
-        // Reverse: add back to source
+        // Reverse: add back to source, deduct from destination
         await _accountRepository.updateAccount(
           account.copyWith(balance: account.balance + txn.amount),
         );
+        if (txn.destinationAccountId != null) {
+          final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
+          await _accountRepository.updateAccount(
+            destAccount.copyWith(balance: destAccount.balance - txn.amount),
+          );
+        }
         break;
     }
   }

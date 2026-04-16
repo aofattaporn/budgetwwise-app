@@ -162,6 +162,12 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         case TransactionType.transfer:
           await accountRepo.updateAccount(
               _account.copyWith(balance: _account.balance + txn.amount));
+          if (txn.destinationAccountId != null) {
+            final accounts = await accountRepo.getAccounts();
+            final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
+            await accountRepo.updateAccount(
+                destAccount.copyWith(balance: destAccount.balance - txn.amount));
+          }
           break;
       }
 

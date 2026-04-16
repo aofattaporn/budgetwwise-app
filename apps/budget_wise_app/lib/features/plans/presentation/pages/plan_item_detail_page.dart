@@ -158,6 +158,11 @@ class _PlanItemDetailPageState extends State<PlanItemDetailPage> {
         case TransactionType.transfer:
           await accountRepo
               .updateAccount(account.copyWith(balance: account.balance + txn.amount));
+          if (txn.destinationAccountId != null) {
+            final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
+            await accountRepo
+                .updateAccount(destAccount.copyWith(balance: destAccount.balance - txn.amount));
+          }
           break;
       }
 

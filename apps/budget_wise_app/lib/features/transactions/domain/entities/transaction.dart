@@ -5,6 +5,7 @@ enum TransactionType { expense, income, transfer }
 class Transaction extends Equatable {
   final String id;
   final String accountId;
+  final String? destinationAccountId;
   final String? planItemId;
   final TransactionType type;
   final double amount;
@@ -16,6 +17,7 @@ class Transaction extends Equatable {
   const Transaction({
     required this.id,
     required this.accountId,
+    this.destinationAccountId,
     this.planItemId,
     required this.type,
     required this.amount,
@@ -28,6 +30,7 @@ class Transaction extends Equatable {
   Transaction copyWith({
     String? id,
     String? accountId,
+    String? destinationAccountId,
     String? planItemId,
     TransactionType? type,
     double? amount,
@@ -39,6 +42,7 @@ class Transaction extends Equatable {
     return Transaction(
       id: id ?? this.id,
       accountId: accountId ?? this.accountId,
+      destinationAccountId: destinationAccountId ?? this.destinationAccountId,
       planItemId: planItemId ?? this.planItemId,
       type: type ?? this.type,
       amount: amount ?? this.amount,
@@ -53,6 +57,7 @@ class Transaction extends Equatable {
   List<Object?> get props => [
         id,
         accountId,
+        destinationAccountId,
         planItemId,
         type,
         amount,

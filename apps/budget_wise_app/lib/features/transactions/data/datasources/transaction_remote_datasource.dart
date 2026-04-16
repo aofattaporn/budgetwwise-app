@@ -27,6 +27,7 @@ class TransactionRemoteDataSource {
     try {
       final data = {
         'account_id': transaction.accountId,
+        'destination_account_id': transaction.destinationAccountId,
         'plan_item_id': transaction.planItemId,
         'type': transaction.type,
         'amount': transaction.amount,
@@ -48,6 +49,7 @@ class TransactionRemoteDataSource {
     try {
       final data = {
         'account_id': transaction.accountId,
+        'destination_account_id': transaction.destinationAccountId,
         'plan_item_id': transaction.planItemId,
         'type': transaction.type,
         'amount': transaction.amount,

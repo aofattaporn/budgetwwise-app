@@ -4,6 +4,7 @@ import '../../domain/entities/transaction.dart';
 class TransactionModel extends Equatable {
   final String id;
   final String accountId;
+  final String? destinationAccountId;
   final String? planItemId;
   final String type;
   final double amount;
@@ -15,6 +16,7 @@ class TransactionModel extends Equatable {
   const TransactionModel({
     required this.id,
     required this.accountId,
+    this.destinationAccountId,
     this.planItemId,
     required this.type,
     required this.amount,
@@ -28,6 +30,7 @@ class TransactionModel extends Equatable {
       TransactionModel(
         id: json['id'] as String,
         accountId: json['account_id'] as String,
+        destinationAccountId: json['destination_account_id'] as String?,
         planItemId: json['plan_item_id'] as String?,
         type: json['type'] as String,
         amount: double.parse(json['amount'].toString()),
@@ -44,6 +47,7 @@ class TransactionModel extends Equatable {
   Map<String, dynamic> toJson() => {
         'id': id,
         'account_id': accountId,
+        'destination_account_id': destinationAccountId,
         'plan_item_id': planItemId,
         'type': type,
         'amount': amount,
@@ -56,6 +60,7 @@ class TransactionModel extends Equatable {
   Transaction toEntity() => Transaction(
         id: id,
         accountId: accountId,
+        destinationAccountId: destinationAccountId,
         planItemId: planItemId,
         type: _parseType(type),
         amount: amount,
@@ -68,6 +73,7 @@ class TransactionModel extends Equatable {
   factory TransactionModel.fromEntity(Transaction entity) => TransactionModel(
         id: entity.id,
         accountId: entity.accountId,
+        destinationAccountId: entity.destinationAccountId,
         planItemId: entity.planItemId,
         type: entity.type.name,
         amount: entity.amount,
@@ -94,6 +100,7 @@ class TransactionModel extends Equatable {
   List<Object?> get props => [
         id,
         accountId,
+        destinationAccountId,
         planItemId,
         type,
         amount,

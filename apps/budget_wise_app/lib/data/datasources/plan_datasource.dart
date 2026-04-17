@@ -44,6 +44,7 @@ abstract class PlanDataSource {
   Future<PlanItemModel> addPlanItem({
     required String planId,
     required String name,
+    String? description,
     required double expectedAmount,
   });
 

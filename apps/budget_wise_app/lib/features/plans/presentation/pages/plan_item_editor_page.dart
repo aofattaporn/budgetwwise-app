@@ -88,6 +88,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       final item = widget.existingItem!;
       _nameController.text = item.name;
       _amountController.text = item.expectedAmount.toStringAsFixed(2);
+      _descriptionController.text = item.description ?? '';
       // Try to find matching icon
       _selectedIconIndex = _findIconIndexByName(item.name);
     }

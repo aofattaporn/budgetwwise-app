@@ -109,6 +109,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
       context.read<ActivePlanBloc>().add(
             AddPlanItemRequested(
               name: result['name'] as String,
+              description: result['description'] as String?,
               expectedAmount: result['amount'] as double,
             ),
           );
@@ -133,6 +134,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
             UpdatePlanItemRequested(
               itemId: item.id,
               name: result['name'] as String,
+              description: result['description'] as String?,
               expectedAmount: result['amount'] as double,
             ),
           );

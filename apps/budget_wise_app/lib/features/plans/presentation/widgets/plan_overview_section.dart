@@ -87,12 +87,31 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
   }
 
   Widget _buildPlanInfo() {
+    final daysLeft = widget.plan.endDate.difference(DateTime.now()).inDays;
+    final daysLeftText = daysLeft < 0
+        ? 'Ended'
+        : daysLeft == 0
+            ? 'Last day'
+            : '$daysLeft days left';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(widget.plan.name, style: AppStyles.titleLarge),
         const SizedBox(height: 4),
-        Text(widget.plan.formattedPeriod, style: AppStyles.caption),
+        Row(
+          children: [
+            Text(widget.plan.formattedPeriod, style: AppStyles.caption),
+            const SizedBox(width: 8),
+            Text('·', style: AppStyles.caption),
+            const SizedBox(width: 8),
+            Text(daysLeftText, style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: daysLeft <= 3 ? AppColors.expense : AppColors.accent,
+            )),
+          ],
+        ),
       ],
     );
   }

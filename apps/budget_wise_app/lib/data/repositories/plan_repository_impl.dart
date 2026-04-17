@@ -146,11 +146,13 @@ class PlanRepositoryImpl implements PlanRepository {
   Future<PlanItem> addPlanItem({
     required String planId,
     required String name,
+    String? description,
     required double expectedAmount,
   }) async {
     final model = await _dataSource.addPlanItem(
       planId: planId,
       name: name,
+      description: description,
       expectedAmount: expectedAmount,
     );
     _cachedPlanItems.remove(planId); // Invalidate only this plan's items

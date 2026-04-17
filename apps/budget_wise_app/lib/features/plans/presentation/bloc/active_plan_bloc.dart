@@ -134,6 +134,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
       final newItem = await _planRepository.addPlanItem(
         planId: state.plan!.id,
         name: event.name,
+        description: event.description,
         expectedAmount: event.expectedAmount,
       );
 
@@ -191,6 +192,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
 
       final updatedItem = existingItem.copyWith(
         name: event.name,
+        description: event.description,
         expectedAmount: event.expectedAmount,
       );
 

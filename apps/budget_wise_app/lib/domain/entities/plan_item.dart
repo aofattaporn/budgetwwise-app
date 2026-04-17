@@ -5,6 +5,7 @@ class PlanItem extends Equatable {
   final String id;
   final String planId;
   final String name;
+  final String? description;
   final double expectedAmount;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -16,6 +17,7 @@ class PlanItem extends Equatable {
     required this.id,
     required this.planId,
     required this.name,
+    this.description,
     required this.expectedAmount,
     this.actualAmount = 0,
     this.createdAt,
@@ -53,6 +55,7 @@ class PlanItem extends Equatable {
     String? id,
     String? planId,
     String? name,
+    String? description,
     double? expectedAmount,
     double? actualAmount,
     DateTime? createdAt,
@@ -62,6 +65,7 @@ class PlanItem extends Equatable {
       id: id ?? this.id,
       planId: planId ?? this.planId,
       name: name ?? this.name,
+      description: description ?? this.description,
       expectedAmount: expectedAmount ?? this.expectedAmount,
       actualAmount: actualAmount ?? this.actualAmount,
       createdAt: createdAt ?? this.createdAt,
@@ -74,6 +78,7 @@ class PlanItem extends Equatable {
         id,
         planId,
         name,
+        description,
         expectedAmount,
         actualAmount,
         createdAt,

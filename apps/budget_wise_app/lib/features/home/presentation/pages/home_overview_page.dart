@@ -367,6 +367,12 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     final budget = state.totalPlannedExpenses;
     final remaining = state.remainingBudget;
     final progress = budget > 0 ? (remaining / budget).clamp(0.0, 1.0) : 0.0;
+    final daysLeft = plan.endDate.difference(DateTime.now()).inDays;
+    final daysLeftText = daysLeft < 0
+        ? 'Ended'
+        : daysLeft == 0
+            ? 'Last day'
+            : '$daysLeft days left';
 
     return Container(
       width: double.infinity,
@@ -380,11 +386,17 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Active Plan', style: AppStyles.label),
-              Text(plan.formattedPeriod, style: AppStyles.caption),
+              Text(daysLeftText, style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: daysLeft <= 3 ? AppColors.expense : AppColors.accent,
+              )),
             ],
           ),
           const SizedBox(height: 4),
           Text(plan.name, style: AppStyles.titleLarge),
+          const SizedBox(height: 2),
+          Text(plan.formattedPeriod, style: AppStyles.caption),
           const SizedBox(height: 16),
           Text('Remaining Budget', style: AppStyles.caption),
           const SizedBox(height: 4),

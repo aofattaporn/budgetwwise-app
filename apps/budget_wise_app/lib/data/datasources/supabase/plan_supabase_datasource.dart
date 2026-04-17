@@ -157,11 +157,13 @@ class PlanSupabaseDataSource implements PlanDataSource {
   Future<PlanItemModel> addPlanItem({
     required String planId,
     required String name,
+    String? description,
     required double expectedAmount,
   }) async {
     final data = {
       'plan_id': planId,
       'name': name,
+      'description': description,
       'expected_amount': expectedAmount,
     };
 

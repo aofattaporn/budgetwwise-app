@@ -6,6 +6,7 @@ class PlanItemModel extends PlanItem {
     required super.id,
     required super.planId,
     required super.name,
+    super.description,
     required super.expectedAmount,
     super.actualAmount,
     super.createdAt,
@@ -18,6 +19,7 @@ class PlanItemModel extends PlanItem {
       id: json['id'] as String,
       planId: json['plan_id'] as String,
       name: json['name'] as String,
+      description: json['description'] as String?,
       expectedAmount: (json['expected_amount'] as num).toDouble(),
       actualAmount: json['actual_amount'] != null
           ? (json['actual_amount'] as num).toDouble()
@@ -46,6 +48,7 @@ class PlanItemModel extends PlanItem {
     return {
       'plan_id': planId,
       'name': name,
+      'description': description,
       'expected_amount': expectedAmount,
     };
   }
@@ -54,6 +57,7 @@ class PlanItemModel extends PlanItem {
   Map<String, dynamic> toUpdateJson() {
     return {
       'name': name,
+      'description': description,
       'expected_amount': expectedAmount,
       'updated_at': DateTime.now().toIso8601String(),
     };
@@ -65,6 +69,7 @@ class PlanItemModel extends PlanItem {
       id: item.id,
       planId: item.planId,
       name: item.name,
+      description: item.description,
       expectedAmount: item.expectedAmount,
       actualAmount: item.actualAmount,
       createdAt: item.createdAt,
@@ -78,6 +83,7 @@ class PlanItemModel extends PlanItem {
       id: id,
       planId: planId,
       name: name,
+      description: description,
       expectedAmount: expectedAmount,
       actualAmount: actualAmount,
       createdAt: createdAt,
@@ -91,6 +97,7 @@ class PlanItemModel extends PlanItem {
       id: id,
       planId: planId,
       name: name,
+      description: description,
       expectedAmount: expectedAmount,
       actualAmount: actual,
       createdAt: createdAt,

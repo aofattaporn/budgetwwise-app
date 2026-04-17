@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/utils/extensions.dart';
+import '../../../../di/injection.dart';
+import '../../../../domain/repositories/auth_repository.dart';
+import '../../../../router/app_router.dart';
 
 /// Full Settings / More screen
 /// Only Appearance section is enabled; all others are disabled (coming soon)
@@ -83,16 +88,22 @@ class SettingsPlaceholderPage extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            // ── Account (DISABLED) ────────────────────────────────────
+            // ── Account ────────────────────────────────────────────
             _SectionCard(
               title: 'Account',
-              enabled: false,
-              children: const [
-                _DisabledRow(icon: Icons.person_outline, label: 'Profile'),
-                _SectionDivider(),
-                _DisabledRow(icon: Icons.lock_outline, label: 'Change password'),
-                _SectionDivider(),
-                _DisabledRow(icon: Icons.logout, label: 'Sign out'),
+              children: [
+                const _DisabledRow(icon: Icons.person_outline, label: 'Profile'),
+                const _SectionDivider(),
+                const _DisabledRow(icon: Icons.lock_outline, label: 'Change password'),
+                const _SectionDivider(),
+                _SignOutRow(onTap: () async {
+                  final result = await getIt<AuthRepository>().logout();
+                  if (!context.mounted) return;
+                  result.fold(
+                    (failure) => context.showSnackBar(failure.message, isError: true),
+                    (_) => context.go(AppRoutes.login),
+                  );
+                }),
               ],
             ),
 
@@ -208,6 +219,34 @@ class _DisabledRow extends StatelessWidget {
           Expanded(child: Text(label, style: AppStyles.bodyMedium)),
           const Icon(Icons.chevron_right, size: 20, color: AppColors.textTertiary),
         ],
+      ),
+    );
+  }
+}
+
+class _SignOutRow extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SignOutRow({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(Icons.logout, size: 20, color: AppColors.expense),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Sign out',
+                style: AppStyles.bodyMedium.copyWith(color: AppColors.expense),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

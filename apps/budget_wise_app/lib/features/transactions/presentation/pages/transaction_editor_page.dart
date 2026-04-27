@@ -1,3 +1,4 @@
+import 'package:app_template/features/plans/plans.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -492,13 +493,15 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Date', style: AppStyles.caption),
-                          const SizedBox(height: 4),
-                          Text(dateFormat.format(state.occurredAt), style: AppStyles.bodyMedium),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Date', style: AppStyles.caption),
+                            const SizedBox(height: 4),
+                            Text(dateFormat.format(state.occurredAt), style: AppStyles.bodyMedium),
+                          ],
+                        ),
                       ),
                       Icon(Icons.calendar_today, size: 18, color: AppColors.textTertiary),
                     ],
@@ -690,42 +693,44 @@ class _PlanItemPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Select Plan Item', style: AppStyles.titleLarge),
-          ),
-          const SizedBox(height: 12),
-          ListTile(
-            leading: AppStyles.iconBox(
-              icon: Icons.clear,
-              size: 36,
-              bgColor: AppColors.surfaceLight,
-              iconColor: AppColors.textTertiary,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text('Select Plan Item', style: AppStyles.titleLarge),
             ),
-            title: Text('None', style: AppStyles.bodyLarge),
-            subtitle: Text('No plan item linked', style: AppStyles.caption),
-            trailing: selectedId.isEmpty
-                ? const Icon(Icons.check_circle, color: AppColors.accent)
-                : null,
-            onTap: onClear,
-          ),
-          ...planItems.map((item) => ListTile(
-                leading: AppStyles.iconBox(icon: Icons.category, size: 36),
-                title: Text(item.name, style: AppStyles.bodyLarge),
-                subtitle: Text(
-                  'Remaining: ${CurrencyUtils.formatCurrency(item.remainingAmount)}',
-                  style: AppStyles.caption,
-                ),
-                trailing: item.id == selectedId
-                    ? const Icon(Icons.check_circle, color: AppColors.accent)
-                    : null,
-                onTap: () => onSelected(item.id),
-              )),
-        ],
+            const SizedBox(height: 12),
+            ListTile(
+              leading: AppStyles.iconBox(
+                icon: Icons.clear,
+                size: 36,
+                bgColor: AppColors.surfaceLight,
+                iconColor: AppColors.textTertiary,
+              ),
+              title: Text('None', style: AppStyles.bodyLarge),
+              subtitle: Text('No plan item linked', style: AppStyles.caption),
+              trailing: selectedId.isEmpty
+                  ? const Icon(Icons.check_circle, color: AppColors.accent)
+                  : null,
+              onTap: onClear,
+            ),
+            ...planItems.map((item) => ListTile(
+                  leading: AppStyles.iconBox(icon: PlanItemIcon.getIcon(item.iconIndex), size: 36),
+                  title: Text(item.name, style: AppStyles.bodyLarge),
+                  subtitle: Text(
+                    'Remaining: ${CurrencyUtils.formatCurrency(item.remainingAmount)}',
+                    style: AppStyles.caption,
+                  ),
+                  trailing: item.id == selectedId
+                      ? const Icon(Icons.check_circle, color: AppColors.accent)
+                      : null,
+                  onTap: () => onSelected(item.id),
+                )),
+          ],
+        ),
       ),
     );
   }

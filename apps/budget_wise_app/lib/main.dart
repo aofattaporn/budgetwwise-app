@@ -9,22 +9,15 @@ import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize app configuration
   await AppConfig.initialize();
-
-  // Initialize dependency injection
   await configureDependencies();
-
-  runApp(
-    const ProviderScope(
-      child: AppTemplateApp(),
-    ),
-  );
+  
+  runApp(const ProviderScope(child: BudgetWiseApp()));
 }
 
-class AppTemplateApp extends ConsumerWidget {
-  const AppTemplateApp({super.key});
+class BudgetWiseApp extends ConsumerWidget {
+
+  const BudgetWiseApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

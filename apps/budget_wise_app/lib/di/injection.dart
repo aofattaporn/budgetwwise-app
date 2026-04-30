@@ -22,9 +22,7 @@ Future<void> configureDependencies() async {
   // ─────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<LocalStorage>(() => SharedPrefsStorage());
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
-  getIt.registerLazySingleton<ApiClient>(
-    () => DioApiClient(baseUrl: AppConfig.apiBaseUrl),
-  );
+  getIt.registerLazySingleton<ApiClient>(() => DioApiClient(baseUrl: AppConfig.apiBaseUrl),);
 
   // ─────────────────────────────────────────────────────────────
   // Supabase (if using Supabase backend)
@@ -54,50 +52,24 @@ Future<void> configureDependencies() async {
   // Data Sources
   // ─────────────────────────────────────────────────────────────
   if (BackendConfig.isSupabase) {
-    getIt.registerLazySingleton<AuthDataSource>(
-      () => AuthSupabaseDataSource(
-        supabaseClient: getIt<SupabaseClient>(),
-      ),
-    );
-    getIt.registerLazySingleton<PlanDataSource>(
-      () => PlanSupabaseDataSource(getIt<SupabaseClient>()),
-    );
-    getIt.registerLazySingleton<AccountRemoteDataSource>(
-      () => AccountRemoteDataSource(getIt<SupabaseClient>()),
-    );
-    getIt.registerLazySingleton<TransactionRemoteDataSource>(
-      () => TransactionRemoteDataSource(getIt<SupabaseClient>()),
-    );
+    getIt.registerLazySingleton<AuthDataSource>(() => AuthSupabaseDataSource(supabaseClient: getIt<SupabaseClient>()));
+    getIt.registerLazySingleton<PlanDataSource>(() => PlanSupabaseDataSource(getIt<SupabaseClient>()));
+    getIt.registerLazySingleton<AccountRemoteDataSource>(() => AccountRemoteDataSource(getIt<SupabaseClient>()));
+    getIt.registerLazySingleton<TransactionRemoteDataSource>(() => TransactionRemoteDataSource(getIt<SupabaseClient>()));
+
   } else {
-    getIt.registerLazySingleton<AuthDataSource>(
-      () => AuthRestDataSource(
-        apiClient: getIt<ApiClient>(),
-        localStorage: getIt<LocalStorage>(),
-      ),
-    );
-    // TODO: Add REST implementation for PlanDataSource if needed
+    getIt.registerLazySingleton<AuthDataSource>(() => AuthRestDataSource(apiClient: getIt<ApiClient>(), localStorage: getIt<LocalStorage>()));
   }
 
   // ─────────────────────────────────────────────────────────────
   // Repositories
   // ─────────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      dataSource: getIt<AuthDataSource>(),
-      networkInfo: getIt<NetworkInfo>(),
-    ),
-  );
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(dataSource: getIt<AuthDataSource>(),networkInfo: getIt<NetworkInfo>()));
 
   if (BackendConfig.isSupabase) {
-    getIt.registerLazySingleton<PlanRepository>(
-      () => PlanRepositoryImpl(getIt<PlanDataSource>()),
-    );
-    getIt.registerLazySingleton<AccountRepository>(
-      () => AccountRepositoryImpl(getIt<AccountRemoteDataSource>()),
-    );
-    getIt.registerLazySingleton<TransactionRepository>(
-      () => TransactionRepositoryImpl(getIt<TransactionRemoteDataSource>()),
-    );
+    getIt.registerLazySingleton<PlanRepository>(() => PlanRepositoryImpl(getIt<PlanDataSource>()));
+    getIt.registerLazySingleton<AccountRepository>(() => AccountRepositoryImpl(getIt<AccountRemoteDataSource>()));
+    getIt.registerLazySingleton<TransactionRepository>(() => TransactionRepositoryImpl(getIt<TransactionRemoteDataSource>()));
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -106,8 +78,8 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => LoginUseCase(getIt<AuthRepository>()));
   getIt.registerLazySingleton(() => RegisterUseCase(getIt<AuthRepository>()));
   getIt.registerLazySingleton(() => LogoutUseCase(getIt<AuthRepository>()));
-  getIt.registerLazySingleton(
-      () => GetCurrentUserUseCase(getIt<AuthRepository>()));
+  getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt<AuthRepository>()));
+
 }
 
 // ⚠️ DEVELOPMENT ONLY - Bypass SSL certificate verification

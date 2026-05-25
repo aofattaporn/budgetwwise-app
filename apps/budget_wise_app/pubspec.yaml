@@ -67,8 +67,22 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.8
   injectable_generator: ^2.4.1
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+
+# App icon generation. Source lives at assets/icon/icon.png.
+# Regenerate after changing the source:  dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#FAFAFA"
+    theme_color: "#1A1A2E"

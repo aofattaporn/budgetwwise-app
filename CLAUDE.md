@@ -83,6 +83,6 @@ DI is wired **by hand** in `lib/di/injection.dart` (`configureDependencies()`, c
 
 ## Gotchas
 
-- `lib/di/injection.dart` installs a `_DevHttpOverrides` that **accepts all TLS certificates** and prints secrets/URLs to console — explicitly dev-only, must not ship to production.
+- `lib/di/injection.dart` defines a `_DevHttpOverrides` that **accepts all TLS certificates**. It is now installed only inside `if (kDebugMode)`, so release builds keep TLS verification — keep it that way. The block still `print`s the Supabase URL (the anon key is no longer printed).
 - The web deploy `--base-href` is `/budgetwwise-app/` (doubled "w"); match it if editing deploy config.
 - `apps/budget_wise_app/README.md` is the default Flutter template and is not authoritative.

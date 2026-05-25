@@ -8,6 +8,7 @@ import '../../../../domain/entities/plan_item.dart';
 import '../../../../domain/repositories/plan_repository.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/transaction_balance_service.dart';
 
 part 'transaction_editor_event.dart';
 part 'transaction_editor_state.dart';
@@ -17,6 +18,9 @@ class TransactionEditorBloc
   final TransactionRepository _transactionRepository;
   final AccountRepository _accountRepository;
   final PlanRepository _planRepository;
+
+  late final TransactionBalanceService _balanceService =
+      TransactionBalanceService(_accountRepository);
 
   TransactionEditorBloc({
     required TransactionRepository transactionRepository,
@@ -229,14 +233,14 @@ class TransactionEditorBloc
       if (state.isEditing) {
         // BR-TXN-EDIT-09: Reverse original balance impact first
         final original = state.existingTransaction!;
-        await _reverseBalanceImpact(original);
+        await _balanceService.reverseImpact(original);
         await _transactionRepository.updateTransaction(transaction);
       } else {
         await _transactionRepository.createTransaction(transaction);
       }
 
       // Apply balance impact based on type
-      await _applyBalanceImpact(transaction);
+      await _balanceService.applyImpact(transaction);
 
       // Invalidate plan cache so actuals are re-computed from transactions
       _planRepository.invalidateCache();
@@ -248,77 +252,6 @@ class TransactionEditorBloc
         errorMessage: 'Failed to save transaction: $e',
       ));
       emit(state.copyWith(status: TransactionEditorStatus.ready));
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Business Rules: Balance Impact
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Apply balance changes after creating/editing a transaction
-  /// Plan item actuals are computed from transactions table (no manual update needed)
-  Future<void> _applyBalanceImpact(Transaction txn) async {
-    final accounts = await _accountRepository.getAccounts();
-    final account = accounts.firstWhere((a) => a.id == txn.accountId);
-
-    switch (txn.type) {
-      case TransactionType.expense:
-        // BR-TXN-EDIT-02: Deduct from account
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance - txn.amount),
-        );
-        break;
-      case TransactionType.income:
-        // BR-TXN-EDIT-03: Add to account
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance + txn.amount),
-        );
-        break;
-      case TransactionType.transfer:
-        // BR-TXN-EDIT-04: Deduct from source, add to destination
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance - txn.amount),
-        );
-        if (txn.destinationAccountId != null) {
-          final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
-          await _accountRepository.updateAccount(
-            destAccount.copyWith(balance: destAccount.balance + txn.amount),
-          );
-        }
-        break;
-    }
-  }
-
-  /// Reverse balance changes before editing/deleting a transaction
-  Future<void> _reverseBalanceImpact(Transaction txn) async {
-    final accounts = await _accountRepository.getAccounts();
-    final account = accounts.firstWhere((a) => a.id == txn.accountId);
-
-    switch (txn.type) {
-      case TransactionType.expense:
-        // Reverse: add back to account
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance + txn.amount),
-        );
-        break;
-      case TransactionType.income:
-        // Reverse: deduct from account
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance - txn.amount),
-        );
-        break;
-      case TransactionType.transfer:
-        // Reverse: add back to source, deduct from destination
-        await _accountRepository.updateAccount(
-          account.copyWith(balance: account.balance + txn.amount),
-        );
-        if (txn.destinationAccountId != null) {
-          final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
-          await _accountRepository.updateAccount(
-            destAccount.copyWith(balance: destAccount.balance - txn.amount),
-          );
-        }
-        break;
     }
   }
 }

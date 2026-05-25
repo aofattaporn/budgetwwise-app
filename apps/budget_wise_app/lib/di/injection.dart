@@ -5,6 +5,8 @@ import 'package:app_template/features/accounts/domain/repositories/account_repos
 import 'package:app_template/features/transactions/data/datasources/transaction_remote_datasource.dart';
 import 'package:app_template/features/transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:app_template/features/transactions/domain/repositories/transaction_repository.dart';
+import 'package:app_template/features/transactions/domain/services/transaction_balance_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
@@ -30,12 +32,15 @@ Future<void> configureDependencies() async {
   if (BackendConfig.isSupabase) {
     print('🔵 Initializing Supabase...');
     print('URL: ${AppConfig.supabaseUrl}');
-    print('Key: ${AppConfig.supabaseAnonKey.substring(0, 20)}...');
-    
+
     try {
-      // Allow self-signed certificates in development (NOT for production!)
-      HttpOverrides.global = _DevHttpOverrides();
-      
+      // Allow self-signed certificates in local development only.
+      // kDebugMode is a compile-time constant, so this can never run in a
+      // release build (web/prod), where TLS verification stays enforced.
+      if (kDebugMode) {
+        HttpOverrides.global = _DevHttpOverrides();
+      }
+
       await Supabase.initialize(
         url: AppConfig.supabaseUrl,
         anonKey: AppConfig.supabaseAnonKey,
@@ -70,6 +75,7 @@ Future<void> configureDependencies() async {
     getIt.registerLazySingleton<PlanRepository>(() => PlanRepositoryImpl(getIt<PlanDataSource>()));
     getIt.registerLazySingleton<AccountRepository>(() => AccountRepositoryImpl(getIt<AccountRemoteDataSource>()));
     getIt.registerLazySingleton<TransactionRepository>(() => TransactionRepositoryImpl(getIt<TransactionRemoteDataSource>()));
+    getIt.registerLazySingleton<TransactionBalanceService>(() => TransactionBalanceService(getIt<AccountRepository>()));
   }
 
   // ─────────────────────────────────────────────────────────────

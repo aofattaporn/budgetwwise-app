@@ -9,6 +9,7 @@ import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../di/injection.dart';
 import '../../../../domain/repositories/plan_repository.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
+import '../../domain/services/transaction_balance_service.dart';
 import '../../../accounts/presentation/bloc/account_bloc.dart';
 import '../../../home/presentation/bloc/home_bloc.dart';
 import '../../../main/presentation/pages/main_app_shell.dart';
@@ -174,33 +175,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     _setProcessing(true);
 
     try {
-      final accountRepo = getIt<AccountRepository>();
-      final accounts = await accountRepo.getAccounts();
-      final account = accounts.firstWhere((a) => a.id == txn.accountId);
-
-      switch (txn.type) {
-        case TransactionType.expense:
-          await accountRepo.updateAccount(
-            account.copyWith(balance: account.balance + txn.amount),
-          );
-          break;
-        case TransactionType.income:
-          await accountRepo.updateAccount(
-            account.copyWith(balance: account.balance - txn.amount),
-          );
-          break;
-        case TransactionType.transfer:
-          await accountRepo.updateAccount(
-            account.copyWith(balance: account.balance + txn.amount),
-          );
-          if (txn.destinationAccountId != null) {
-            final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
-            await accountRepo.updateAccount(
-              destAccount.copyWith(balance: destAccount.balance - txn.amount),
-            );
-          }
-          break;
-      }
+      await getIt<TransactionBalanceService>().reverseImpact(txn);
 
       await getIt<TransactionRepository>().deleteTransaction(txn.id);
       getIt<PlanRepository>().invalidateCache();

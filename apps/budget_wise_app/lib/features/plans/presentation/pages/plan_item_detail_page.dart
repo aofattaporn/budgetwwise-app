@@ -11,12 +11,12 @@ import '../../../../domain/entities/plan_item.dart';
 import 'plan_item_editor_page.dart';
 import '../../../../domain/repositories/plan_repository.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
+import '../../../transactions/domain/services/transaction_balance_service.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../../transactions/presentation/bloc/transaction_editor_bloc.dart';
 import '../../../transactions/presentation/pages/transaction_editor_page.dart';
 import '../bloc/active_plan_bloc.dart';
-import 'plan_item_editor_page.dart';
 
 class PlanItemDetailPage extends StatefulWidget {
   final PlanItem item;
@@ -147,29 +147,7 @@ class _PlanItemDetailPageState extends State<PlanItemDetailPage> {
     if (!confirmed || !mounted) return;
 
     try {
-      final accountRepo = getIt<AccountRepository>();
-      final accounts = await accountRepo.getAccounts();
-      final account = accounts.firstWhere((a) => a.id == txn.accountId);
-
-      switch (txn.type) {
-        case TransactionType.expense:
-          await accountRepo
-              .updateAccount(account.copyWith(balance: account.balance + txn.amount));
-          break;
-        case TransactionType.income:
-          await accountRepo
-              .updateAccount(account.copyWith(balance: account.balance - txn.amount));
-          break;
-        case TransactionType.transfer:
-          await accountRepo
-              .updateAccount(account.copyWith(balance: account.balance + txn.amount));
-          if (txn.destinationAccountId != null) {
-            final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
-            await accountRepo
-                .updateAccount(destAccount.copyWith(balance: destAccount.balance - txn.amount));
-          }
-          break;
-      }
+      await getIt<TransactionBalanceService>().reverseImpact(txn);
 
       await getIt<TransactionRepository>().deleteTransaction(txn.id);
       getIt<PlanRepository>().invalidateCache();

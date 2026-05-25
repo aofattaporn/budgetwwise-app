@@ -128,11 +128,11 @@ class InsightChatCubit extends Cubit<InsightChatState> {
         return;
       }
 
-        if (statusCode == 503) {
+      if (statusCode == 503) {
         emit(state.copyWith(
           status: ChatStatus.error,
           errorMessage:
-              'Rate limit reached. Please wait a moment before trying again.',
+              'The assistant is temporarily unavailable. Please try again in a moment.',
         ));
         return;
       }

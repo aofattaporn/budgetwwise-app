@@ -69,9 +69,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 class AppRoutes {
   AppRoutes._();
 
-  static const String splash = '/';
-  static const String home = '/home';
   static const String main = '/main';
   static const String login = '/login';
-  static const String register = '/register';
 }

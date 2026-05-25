@@ -12,6 +12,7 @@ import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/domain/repositories/transaction_repository.dart';
+import '../../../transactions/domain/services/transaction_balance_service.dart';
 import '../../../transactions/presentation/bloc/transaction_editor_bloc.dart';
 import '../../../transactions/presentation/pages/transaction_editor_page.dart';
 import '../bloc/account_bloc.dart';
@@ -148,28 +149,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     if (!confirmed || !mounted) return;
 
     try {
-      final accountRepo = getIt<AccountRepository>();
-
-      switch (txn.type) {
-        case TransactionType.expense:
-          await accountRepo.updateAccount(
-              _account.copyWith(balance: _account.balance + txn.amount));
-          break;
-        case TransactionType.income:
-          await accountRepo.updateAccount(
-              _account.copyWith(balance: _account.balance - txn.amount));
-          break;
-        case TransactionType.transfer:
-          await accountRepo.updateAccount(
-              _account.copyWith(balance: _account.balance + txn.amount));
-          if (txn.destinationAccountId != null) {
-            final accounts = await accountRepo.getAccounts();
-            final destAccount = accounts.firstWhere((a) => a.id == txn.destinationAccountId);
-            await accountRepo.updateAccount(
-                destAccount.copyWith(balance: destAccount.balance - txn.amount));
-          }
-          break;
-      }
+      await getIt<TransactionBalanceService>().reverseImpact(txn);
 
       await getIt<TransactionRepository>().deleteTransaction(txn.id);
       getIt<PlanRepository>().invalidateCache();

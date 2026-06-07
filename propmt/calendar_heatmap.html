@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Category Heatmap — May 2026</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #08090f;
+        --s1: #10111a;
+        --s2: #161720;
+        --border: #1e2030;
+        --text: #dde0f5;
+        --muted: #4a4d6a;
+        --food-base: #ff6b35;
+        --sub-base: #a78bfa;
+        --fuel-base: #4ade80;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Anuphan", sans-serif;
+        min-height: 100vh;
+        padding: 36px 18px 80px;
+      }
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .eyebrow {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 4px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 36px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .tab {
+        padding: 8px 18px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--s1);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Anuphan", sans-serif;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tab.active-food {
+        background: rgba(255, 107, 53, 0.12);
+        border-color: rgba(255, 107, 53, 0.4);
+        color: var(--food-base);
+      }
+      .tab.active-sub {
+        background: rgba(167, 139, 250, 0.12);
+        border-color: rgba(167, 139, 250, 0.4);
+        color: var(--sub-base);
+      }
+      .tab.active-fuel {
+        background: rgba(74, 222, 128, 0.12);
+        border-color: rgba(74, 222, 128, 0.4);
+        color: var(--fuel-base);
+      }
+      .tab-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: var(--s1);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 12px;
+      }
+      .stat-card .sl {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .stat-card .sv {
+        font-family: "Space Mono", monospace;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .cal-section {
+        background: var(--s1);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .cal-section-title {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .week-headers {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-bottom: 6px;
+      }
+      .wh {
+        text-align: center;
+        font-size: 10px;
+        color: var(--muted);
+        font-family: "Space Mono", monospace;
+        padding: 3px 0;
+      }
+      .wh.we {
+        color: rgba(255, 107, 53, 0.5);
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+      }
+      .cell {
+        aspect-ratio: 1;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--s2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        cursor: default;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+      }
+      .cell.empty {
+        background: transparent;
+        border-color: transparent;
+      }
+      .cell.has-data {
+        cursor: pointer;
+      }
+      .cell.has-data:hover {
+        transform: scale(1.08);
+        z-index: 10;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      }
+      .cdate {
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .ccount {
+        font-size: 8px;
+        margin-top: 2px;
+        line-height: 1;
+      }
+      .cbar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+      }
+
+      /* Food heat */
+      .fh1 {
+        background: rgba(255, 107, 53, 0.08);
+        border-color: rgba(255, 107, 53, 0.2);
+      }
+      .fh2 {
+        background: rgba(255, 107, 53, 0.16);
+        border-color: rgba(255, 107, 53, 0.3);
+      }
+      .fh3 {
+        background: rgba(255, 107, 53, 0.26);
+        border-color: rgba(255, 107, 53, 0.45);
+      }
+      .fh4 {
+        background: rgba(255, 107, 53, 0.38);
+        border-color: rgba(255, 107, 53, 0.6);
+      }
+      .fh5 {
+        background: rgba(255, 107, 53, 0.55);
+        border-color: rgba(255, 107, 53, 0.8);
+      }
+      /* Sub heat */
+      .sh1 {
+        background: rgba(167, 139, 250, 0.1);
+        border-color: rgba(167, 139, 250, 0.25);
+      }
+      .sh2 {
+        background: rgba(167, 139, 250, 0.2);
+        border-color: rgba(167, 139, 250, 0.4);
+      }
+      .sh3 {
+        background: rgba(167, 139, 250, 0.38);
+        border-color: rgba(167, 139, 250, 0.6);
+      }
+      /* Fuel heat */
+      .gh1 {
+        background: rgba(74, 222, 128, 0.08);
+        border-color: rgba(74, 222, 128, 0.2);
+      }
+      .gh2 {
+        background: rgba(74, 222, 128, 0.2);
+        border-color: rgba(74, 222, 128, 0.35);
+      }
+      .gh3 {
+        background: rgba(74, 222, 128, 0.38);
+        border-color: rgba(74, 222, 128, 0.6);
+      }
+
+      .freq-section {
+        background: var(--s1);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .freq-title {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .freq-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .freq-label {
+        font-size: 12px;
+        color: var(--muted);
+        width: 36px;
+        text-align: right;
+        flex-shrink: 0;
+        font-family: "Space Mono", monospace;
+      }
+      .freq-track {
+        flex: 1;
+        background: var(--border);
+        border-radius: 3px;
+        height: 20px;
+        overflow: hidden;
+      }
+      .freq-fill {
+        height: 100%;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+      }
+      .freq-val {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .freq-count {
+        font-size: 11px;
+        color: var(--muted);
+        width: 40px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .analysis {
+        background: var(--s1);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .analysis-title {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .insight {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+      }
+      .insight-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .insight-text {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text);
+      }
+      .insight-text strong {
+        font-weight: 600;
+      }
+
+      /* vs June comparison */
+      .vs-box {
+        background: var(--s2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-top: 8px;
+      }
+      .vs-title {
+        font-family: "Space Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .vs-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-size: 12px;
+      }
+      .vs-label {
+        color: var(--muted);
+      }
+      .vs-val {
+        font-family: "Space Mono", monospace;
+        font-weight: 700;
+      }
+
+      .tooltip {
+        position: fixed;
+        background: #1a1b28;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 12px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 100;
+        min-width: 130px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      }
+      .tooltip.show {
+        opacity: 1;
+      }
+      .tt-d {
+        font-family: "Space Mono", monospace;
+        font-size: 9px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .tt-v {
+        font-family: "Space Mono", monospace;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .tt-c {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      @media (max-width: 480px) {
+        .stats-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .ccount {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="eyebrow">May 2026 · Category Analysis</div>
+      <h1>Spending Heatmap</h1>
+      <div class="sub">25 เม.ย. – 24 พ.ค. 2569 · 3 หมวด</div>
+
+      <div class="tabs">
+        <div class="tab active-food" onclick="switchTab('food')">
+          <div class="tab-dot" style="background: var(--food-base)"></div>
+          Food
+        </div>
+        <div class="tab" onclick="switchTab('sub')">
+          <div class="tab-dot" style="background: var(--sub-base)"></div>
+          Subscription
+        </div>
+        <div class="tab" onclick="switchTab('fuel')">
+          <div class="tab-dot" style="background: var(--fuel-base)"></div>
+          ค่าน้ำมัน
+        </div>
+      </div>
+
+      <!-- FOOD -->
+      <div class="panel active" id="panel-food">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="sl">Total</div>
+            <div class="sv" style="color: var(--food-base)">฿8,626</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">วันที่ใช้</div>
+            <div class="sv" style="color: var(--food-base)">20 วัน</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Tx ทั้งหมด</div>
+            <div class="sv" style="color: var(--food-base)">51 ครั้ง</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Budget</div>
+            <div class="sv" style="color: var(--food-base)">฿9,000</div>
+          </div>
+        </div>
+        <div class="cal-section">
+          <div class="cal-section-title">📅 Calendar Heatmap — Amount</div>
+          <div class="week-headers">
+            <div class="wh we">อา</div>
+            <div class="wh">จ</div>
+            <div class="wh">อ</div>
+            <div class="wh">พ</div>
+            <div class="wh">พฤ</div>
+            <div class="wh">ศ</div>
+            <div class="wh we">ส</div>
+          </div>
+          <div class="cal-grid" id="food-cal"></div>
+        </div>
+        <div class="freq-section">
+          <div class="freq-title">📊 Frequency by Day of Week</div>
+          <div id="food-freq"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-title">🔍 วิเคราะห์ + เทียบ June</div>
+          <div class="insight">
+            <div class="insight-icon">🔴</div>
+            <div class="insight-text">
+              <strong>15 พ.ค. spike สูงสุด ฿2,041</strong> — วันเสาร์
+              มื้อใหญ่สุดของเดือน คิดเป็น 24% ของ budget ทั้งหมดแค่วันเดียว
+            </div>
+          </div>
+          <div class="insight">
+            <div class="insight-icon">📊</div>
+            <div class="insight-text">
+              <strong>วันแรก plan 26 เม.ย. ฿899</strong> — เสาร์เช่นกัน pattern
+              weekend spike เกิดซ้ำทุกเดือน
+            </div>
+          </div>
+          <div class="insight">
+            <div class="insight-icon">✅</div>
+            <div class="insight-text">
+              อยู่ใน budget ได้ (฿8,626 / ฿9,000 = 96%) แต่ budget May
+              ตั้งสูงกว่า June ถึง ฿3,000
+            </div>
+          </div>
+          <div class="vs-box">
+            <div class="vs-title">⚖️ May vs June</div>
+            <div class="vs-row">
+              <span class="vs-label">Budget</span
+              ><span class="vs-val">฿9,000 → ฿6,000</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">Actual</span
+              ><span class="vs-val">฿8,626 → ฿5,035*</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">Avg/วัน</span
+              ><span class="vs-val">฿288 → ฿387</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">วันสูงสุด</span
+              ><span class="vs-val">฿2,041 → ฿1,231</span>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 8px">
+              *June ยังไม่จบ plan period
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIPTION -->
+      <div class="panel" id="panel-sub">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="sl">Total</div>
+            <div class="sv" style="color: var(--sub-base)">฿2,387</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">วันที่ใช้</div>
+            <div class="sv" style="color: var(--sub-base)">4 วัน</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Tx ทั้งหมด</div>
+            <div class="sv" style="color: var(--sub-base)">4 ครั้ง</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Budget</div>
+            <div class="sv" style="color: var(--sub-base)">฿716</div>
+          </div>
+        </div>
+        <div class="cal-section">
+          <div class="cal-section-title">📅 Calendar Heatmap — Amount</div>
+          <div class="week-headers">
+            <div class="wh we">อา</div>
+            <div class="wh">จ</div>
+            <div class="wh">อ</div>
+            <div class="wh">พ</div>
+            <div class="wh">พฤ</div>
+            <div class="wh">ศ</div>
+            <div class="wh we">ส</div>
+          </div>
+          <div class="cal-grid" id="sub-cal"></div>
+        </div>
+        <div class="freq-section">
+          <div class="freq-title">📊 Frequency by Day of Week</div>
+          <div id="sub-freq"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-title">🔍 วิเคราะห์ + เทียบ June</div>
+          <div class="insight">
+            <div class="insight-icon">🔴</div>
+            <div class="insight-text">
+              <strong>Overrun หนักมาก ฿2,387 vs budget ฿716</strong> — เกินไป
+              3.3x เพราะ Claude Pro ฿1,289 โผล่กลางเดือน
+            </div>
+          </div>
+          <div class="insight">
+            <div class="insight-icon">📅</div>
+            <div class="insight-text">
+              <strong>กระจายทั้งต้น-กลาง-ปลายเดือน</strong> — 25 เม.ย., 16, 17,
+              21 พ.ค. ต่างจาก June ที่หักหมดใน 3 วันแรก
+            </div>
+          </div>
+          <div class="vs-box">
+            <div class="vs-title">⚖️ May vs June</div>
+            <div class="vs-row">
+              <span class="vs-label">Budget</span
+              ><span class="vs-val">฿716 → ฿1,300</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">Actual</span
+              ><span class="vs-val">฿2,387 → ฿754*</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">Overrun</span
+              ><span class="vs-val">฿1,671 → ฿253 (คาด)</span>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 8px">
+              Budget June ตั้งสูงขึ้นแต่ก็ยังไม่พอ
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUEL -->
+      <div class="panel" id="panel-fuel">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="sl">Total</div>
+            <div class="sv" style="color: var(--fuel-base)">฿1,250</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">วันที่ใช้</div>
+            <div class="sv" style="color: var(--fuel-base)">1 วัน</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Tx ทั้งหมด</div>
+            <div class="sv" style="color: var(--fuel-base)">1 ครั้ง</div>
+          </div>
+          <div class="stat-card">
+            <div class="sl">Budget</div>
+            <div class="sv" style="color: var(--fuel-base)">฿2,500</div>
+          </div>
+        </div>
+        <div class="cal-section">
+          <div class="cal-section-title">📅 Calendar Heatmap — Amount</div>
+          <div class="week-headers">
+            <div class="wh we">อา</div>
+            <div class="wh">จ</div>
+            <div class="wh">อ</div>
+            <div class="wh">พ</div>
+            <div class="wh">พฤ</div>
+            <div class="wh">ศ</div>
+            <div class="wh we">ส</div>
+          </div>
+          <div class="cal-grid" id="fuel-cal"></div>
+        </div>
+        <div class="freq-section">
+          <div class="freq-title">📊 Frequency by Day of Week</div>
+          <div id="fuel-freq"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-title">🔍 วิเคราะห์ + เทียบ June</div>
+          <div class="insight">
+            <div class="insight-icon">⛽</div>
+            <div class="insight-text">
+              <strong>เติมแค่ครั้งเดียว 14 พ.ค. ฿1,250</strong> — ใช้ budget แค่
+              50% อยู่ใน plan สบายมาก
+            </div>
+          </div>
+          <div class="insight">
+            <div class="insight-icon">💡</div>
+            <div class="insight-text">
+              May ดูเหมือนขับน้อยกว่า June มาก
+              หรืออาจเติมน้อยลงเพราะมีเงินสำรองจากเดือนก่อน
+            </div>
+          </div>
+          <div class="vs-box">
+            <div class="vs-title">⚖️ May vs June</div>
+            <div class="vs-row">
+              <span class="vs-label">Budget</span
+              ><span class="vs-val">฿2,500 → ฿2,500</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">Actual</span
+              ><span class="vs-val">฿1,250 → ฿2,250*</span>
+            </div>
+            <div class="vs-row">
+              <span class="vs-label">ครั้งที่เติม</span
+              ><span class="vs-val">1 → 2 ครั้ง</span>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 8px">
+              June ขับเยอะขึ้นชัดเจน budget ไม่พอแล้ว
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tooltip" id="tt">
+      <div class="tt-d" id="tt-d"></div>
+      <div class="tt-v" id="tt-v"></div>
+      <div class="tt-c" id="tt-c"></div>
+    </div>
+
+    <script>
+      const DATA = {
+        food: [
+          { day: "2026-04-25", count: 1, total: 139.95 },
+          { day: "2026-04-26", count: 3, total: 899.5 },
+          { day: "2026-04-27", count: 4, total: 445 },
+          { day: "2026-04-28", count: 1, total: 100 },
+          { day: "2026-04-29", count: 1, total: 189 },
+          { day: "2026-04-30", count: 7, total: 221 },
+          { day: "2026-05-01", count: 6, total: 742 },
+          { day: "2026-05-02", count: 6, total: 1036 },
+          { day: "2026-05-03", count: 2, total: 180 },
+          { day: "2026-05-05", count: 2, total: 391 },
+          { day: "2026-05-07", count: 3, total: 119 },
+          { day: "2026-05-10", count: 1, total: 270 },
+          { day: "2026-05-11", count: 2, total: 604 },
+          { day: "2026-05-12", count: 3, total: 195 },
+          { day: "2026-05-14", count: 4, total: 113 },
+          { day: "2026-05-15", count: 3, total: 2041.6 },
+          { day: "2026-05-20", count: 1, total: 121 },
+          { day: "2026-05-21", count: 3, total: 119 },
+          { day: "2026-05-23", count: 2, total: 525 },
+          { day: "2026-05-24", count: 1, total: 175 },
+        ],
+        sub: [
+          { day: "2026-04-25", count: 1, total: 200 },
+          { day: "2026-05-16", count: 1, total: 1288.92 },
+          { day: "2026-05-17", count: 1, total: 99 },
+          { day: "2026-05-21", count: 1, total: 799 },
+        ],
+        fuel: [{ day: "2026-05-14", count: 1, total: 1250 }],
+      };
+
+      const COLORS = {
+        food: "rgba(255,107,53,",
+        sub: "rgba(167,139,250,",
+        fuel: "rgba(74,222,128,",
+      };
+      const HEAT = {
+        food: {
+          cls: ["fh1", "fh2", "fh3", "fh4", "fh5"],
+          thresholds: [200, 500, 800, 1500],
+        },
+        sub: { cls: ["sh1", "sh2", "sh3"], thresholds: [300, 800] },
+        fuel: { cls: ["gh1", "gh2", "gh3"], thresholds: [800, 1100] },
+      };
+
+      function fmt(n) {
+        return "฿" + Math.round(n).toLocaleString();
+      }
+      function getHeat(cat, val) {
+        const h = HEAT[cat];
+        for (let i = 0; i < h.thresholds.length; i++) {
+          if (val < h.thresholds[i]) return h.cls[i];
+        }
+        return h.cls[h.cls.length - 1];
+      }
+      function isWE(ds) {
+        const d = new Date(ds + "T12:00:00");
+        return d.getDay() === 0 || d.getDay() === 6;
+      }
+      function thaiDay(ds) {
+        const d = new Date(ds + "T12:00:00");
+        const days = [
+          "อาทิตย์",
+          "จันทร์",
+          "อังคาร",
+          "พุธ",
+          "พฤหัส",
+          "ศุกร์",
+          "เสาร์",
+        ];
+        const mo = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."][
+          d.getMonth()
+        ];
+        return days[d.getDay()] + "ที่ " + d.getDate() + " " + mo;
+      }
+      function buildLookup(arr) {
+        const m = {};
+        arr.forEach((r) => (m[r.day] = r));
+        return m;
+      }
+
+      // All days: 25 Apr – 24 May 2026
+      const allDays = [];
+      let cur = new Date("2026-04-25T12:00:00");
+      const endD = new Date("2026-05-24T12:00:00");
+      while (cur <= endD) {
+        allDays.push(cur.toISOString().slice(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      function buildCal(containerId, cat, lookup, colorBase) {
+        const grid = document.getElementById(containerId);
+        // 25 Apr 2026 is Saturday → offset = 6
+        for (let i = 0; i < 6; i++) {
+          const e = document.createElement("div");
+          e.className = "cell empty";
+          grid.appendChild(e);
+        }
+        allDays.forEach((ds) => {
+          const d = new Date(ds + "T12:00:00");
+          const data = lookup[ds];
+          const we = isWE(ds);
+          const cell = document.createElement("div");
+          let cls = "cell";
+          if (data) cls += " has-data " + getHeat(cat, data.total);
+          cell.className = cls;
+          const dateEl = document.createElement("div");
+          dateEl.className = "cdate";
+          dateEl.textContent = d.getDate();
+          cell.appendChild(dateEl);
+          if (data) {
+            const countEl = document.createElement("div");
+            countEl.className = "ccount";
+            countEl.textContent = data.count + "x";
+            countEl.style.color = colorBase + "0.7)";
+            cell.appendChild(countEl);
+            const bar = document.createElement("div");
+            bar.className = "cbar";
+            bar.style.background = colorBase + "0.8)";
+            cell.appendChild(bar);
+            const tt = document.getElementById("tt");
+            cell.addEventListener("mousemove", (e) => {
+              document.getElementById("tt-d").textContent = thaiDay(ds);
+              document.getElementById("tt-v").textContent = fmt(data.total);
+              document.getElementById("tt-v").style.color = colorBase + "1)";
+              document.getElementById("tt-c").textContent =
+                data.count + " transactions";
+              tt.style.left = e.clientX + 14 + "px";
+              tt.style.top = e.clientY - 70 + "px";
+              tt.classList.add("show");
+            });
+            cell.addEventListener("mouseleave", () =>
+              tt.classList.remove("show"),
+            );
+          }
+          grid.appendChild(cell);
+        });
+      }
+
+      function buildFreq(containerId, cat, dataArr, colorBase) {
+        const days = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        const totals = [0, 0, 0, 0, 0, 0, 0];
+        dataArr.forEach((r) => {
+          const dow = new Date(r.day + "T12:00:00").getDay();
+          counts[dow] += r.count;
+          totals[dow] += r.total;
+        });
+        const maxTotal = Math.max(...totals);
+        const wrap = document.getElementById(containerId);
+        days.forEach((label, i) => {
+          const row = document.createElement("div");
+          row.className = "freq-row";
+          const lbl = document.createElement("div");
+          lbl.className = "freq-label";
+          lbl.textContent = label;
+          row.appendChild(lbl);
+          const track = document.createElement("div");
+          track.className = "freq-track";
+          const fill = document.createElement("div");
+          fill.className = "freq-fill";
+          const pct = maxTotal > 0 ? (totals[i] / maxTotal) * 100 : 0;
+          fill.style.width = pct + "%";
+          fill.style.background =
+            i === 0 || i === 6 ? colorBase + "0.7)" : colorBase + "0.45)";
+          if (totals[i] > 0) {
+            const val = document.createElement("div");
+            val.className = "freq-val";
+            val.textContent = fmt(totals[i]);
+            fill.appendChild(val);
+          }
+          track.appendChild(fill);
+          row.appendChild(track);
+          const cnt = document.createElement("div");
+          cnt.className = "freq-count";
+          cnt.textContent = counts[i] > 0 ? counts[i] + "x" : "";
+          cnt.style.color = colorBase + "0.7)";
+          row.appendChild(cnt);
+          wrap.appendChild(row);
+        });
+      }
+
+      buildCal("food-cal", "food", buildLookup(DATA.food), COLORS.food);
+      buildCal("sub-cal", "sub", buildLookup(DATA.sub), COLORS.sub);
+      buildCal("fuel-cal", "fuel", buildLookup(DATA.fuel), COLORS.fuel);
+      buildFreq("food-freq", "food", DATA.food, COLORS.food);
+      buildFreq("sub-freq", "sub", DATA.sub, COLORS.sub);
+      buildFreq("fuel-freq", "fuel", DATA.fuel, COLORS.fuel);
+
+      function switchTab(cat) {
+        const cats = ["food", "sub", "fuel"];
+        document.querySelectorAll(".tab").forEach((t, i) => {
+          t.className = "tab";
+          if (cats[i] === cat) t.className = "tab active-" + cat;
+        });
+        document
+          .querySelectorAll(".panel")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById("panel-" + cat).classList.add("active");
+      }
+    </script>
+  </body>
+</html>

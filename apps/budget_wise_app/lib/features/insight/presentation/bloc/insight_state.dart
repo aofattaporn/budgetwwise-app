@@ -41,6 +41,47 @@ class CategoryInsight extends Equatable {
   List<Object?> get props => [name, budget, actual];
 }
 
+/// Per-day per-category expense entry used by the heatmap.
+class DailyCategoryAmount extends Equatable {
+  final DateTime date;
+  final String categoryName;
+  final double amount;
+  final int txCount;
+
+  const DailyCategoryAmount({
+    required this.date,
+    required this.categoryName,
+    required this.amount,
+    required this.txCount,
+  });
+
+  @override
+  List<Object?> get props => [date, categoryName, amount, txCount];
+}
+
+/// Private key for grouping by (date, category).
+class _DayCategory {
+  final DateTime date;
+  final String category;
+
+  const _DayCategory(this.date, this.category);
+
+  @override
+  bool operator ==(Object other) =>
+      other is _DayCategory && date == other.date && category == other.category;
+
+  @override
+  int get hashCode => Object.hash(date, category);
+}
+
+/// Private accumulator for amount + count.
+class _DayCategoryAccum {
+  final double amount;
+  final int count;
+
+  const _DayCategoryAccum(this.amount, this.count);
+}
+
 class InsightState extends Equatable {
   final InsightStatus status;
   final List<Plan> allPlans;
@@ -201,6 +242,55 @@ class InsightState extends Equatable {
       categoryInsights.where((c) => c.isOverBudget).toList();
 
   int get transactionCount => transactions.length;
+
+  /// Per-day per-category expense aggregation for the heatmap.
+  /// Only expense transactions are included.
+  List<DailyCategoryAmount> get dailyCategoryAmounts {
+    final names = _planItemNames;
+    final map = <_DayCategory, _DayCategoryAccum>{};
+
+    for (final txn in transactions) {
+      if (txn.type != TransactionType.expense) continue;
+      final dateKey = DateTime(
+          txn.occurredAt.year, txn.occurredAt.month, txn.occurredAt.day);
+      final catName = txn.planItemId != null
+          ? (names[txn.planItemId] ?? 'Unknown')
+          : 'Uncategorized';
+      final key = _DayCategory(dateKey, catName);
+      final existing = map[key] ?? _DayCategoryAccum(0, 0);
+      map[key] = _DayCategoryAccum(existing.amount + txn.amount, existing.count + 1);
+    }
+
+    return map.entries
+        .map((e) => DailyCategoryAmount(
+              date: e.key.date,
+              categoryName: e.key.category,
+              amount: e.value.amount,
+              txCount: e.value.count,
+            ))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  /// Expense totals indexed by day-of-week (0=Sun … 6=Sat).
+  List<double> get dowExpenseTotals {
+    final totals = List<double>.filled(7, 0);
+    for (final txn in transactions) {
+      if (txn.type != TransactionType.expense) continue;
+      totals[txn.occurredAt.weekday % 7] += txn.amount;
+    }
+    return totals;
+  }
+
+  /// Number of distinct days that have at least one expense transaction.
+  int get activeDaysWithExpense {
+    return transactions
+        .where((t) => t.type == TransactionType.expense)
+        .map((t) =>
+            DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day))
+        .toSet()
+        .length;
+  }
 
   InsightState copyWith({
     InsightStatus? status,

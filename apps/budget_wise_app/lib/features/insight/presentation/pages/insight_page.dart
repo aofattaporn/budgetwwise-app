@@ -11,7 +11,9 @@ import '../../../../di/injection.dart';
 import '../../../settings/settings.dart';
 import '../bloc/insight_bloc.dart';
 import '../bloc/insight_chat_cubit.dart';
+import '../widgets/heatmap_calendar_grid.dart';
 import '../widgets/insight_chat_sheet.dart';
+import 'heatmap_page.dart';
 
 class InsightPage extends StatefulWidget {
   const InsightPage({super.key});
@@ -242,10 +244,8 @@ class _InsightPageState extends State<InsightPage> {
         child: Column(
           children: [
             _buildSummaryCards(state),
-            // const SizedBox(height: 20),
-            // _buildBudgetVsActualChart(state),
             const SizedBox(height: 20),
-            _buildExpenseByCategoryChart(state),
+            _buildInlineHeatmap(state),
             const SizedBox(height: 20),
             if (state.overspentCategories.isNotEmpty) ...[
               _buildOverspendList(state),
@@ -518,122 +518,6 @@ class _InsightPageState extends State<InsightPage> {
               const SizedBox(width: 20),
               _buildLegendDot(context.colors.expense, 'Expense'),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // EXPENSE BY CATEGORY PIE CHART (with resolved names)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildExpenseByCategoryChart(InsightState state) {
-    final insights = state.categoryInsights;
-    if (insights.isEmpty) return const SizedBox.shrink();
-
-    final total = insights.fold(0.0, (sum, c) => sum + c.actual);
-    if (total == 0) return const SizedBox.shrink();
-
-    // Take top 6, merge rest into "Other"
-    final display = <CategoryInsight>[];
-    double otherTotal = 0;
-    for (int i = 0; i < insights.length; i++) {
-      if (insights[i].actual == 0) continue;
-      if (display.length < 6) {
-        display.add(insights[i]);
-      } else {
-        otherTotal += insights[i].actual;
-      }
-    }
-    if (otherTotal > 0) {
-      display.add(CategoryInsight(name: 'Other', budget: 0, actual: otherTotal));
-    }
-
-    final colors = [
-      context.colors.accent,
-      context.colors.expense,
-      context.colors.income,
-      const Color(0xFFFF9800),
-      const Color(0xFF9C27B0),
-      const Color(0xFF00BCD4),
-      context.colors.textTertiary,
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(AppDimens.cardPadding),
-      decoration: context.styles.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Expense by Category', style: context.styles.titleMedium),
-          const SizedBox(height: 4),
-          Text('Where your money goes', style: context.styles.caption),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 180,
-            child: Row(
-              children: [
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 36,
-                      sections: display.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final c = entry.value;
-                        final pct = (c.actual / total * 100);
-                        return PieChartSectionData(
-                          color: colors[i % colors.length],
-                          value: c.actual,
-                          title: '${pct.toStringAsFixed(0)}%',
-                          radius: 40,
-                          titleStyle: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: display.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final c = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: colors[i % colors.length],
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                c.name,
-                                style: context.styles.caption,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -1090,6 +974,83 @@ class _InsightPageState extends State<InsightPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INLINE HEATMAP (replaces donut chart)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildInlineHeatmap(InsightState state) {
+    final entries = state.dailyCategoryAmounts;
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => HeatmapPage(state: state)),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimens.cardPadding),
+        decoration: context.styles.card,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Spending Heatmap',
+                          style: context.styles.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${state.activeDaysWithExpense} active days · '
+                        '${CurrencyUtils.formatCurrency(state.totalExpense)} total',
+                        style: context.styles.caption,
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text('Details', style: context.styles.caption),
+                    Icon(Icons.chevron_right,
+                        size: 16, color: context.colors.textTertiary),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            HeatmapCalendarGrid(
+              entries: entries,
+              periodStart: state.periodStart,
+              periodEnd: state.periodEnd,
+              color: context.colors.accent,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text('Less', style: context.styles.caption),
+                const SizedBox(width: 6),
+                ...List.generate(5, (i) {
+                  final opacity = 0.08 + (i / 4) * 0.57;
+                  return Container(
+                    width: 16,
+                    height: 10,
+                    margin: const EdgeInsets.only(right: 3),
+                    decoration: BoxDecoration(
+                      color: context.colors.accent.withValues(alpha: opacity),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  );
+                }),
+                const SizedBox(width: 6),
+                Text('More', style: context.styles.caption),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

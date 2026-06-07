@@ -11,12 +11,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.initialize();
   await configureDependencies();
-  
+
   runApp(const ProviderScope(child: BudgetWiseApp()));
 }
 
 class BudgetWiseApp extends ConsumerWidget {
-
   const BudgetWiseApp({super.key});
 
   @override
@@ -38,4 +37,3 @@ class BudgetWiseApp extends ConsumerWidget {
     );
   }
 }
-

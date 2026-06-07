@@ -149,6 +149,7 @@ class PlanRepositoryImpl implements PlanRepository {
     String? description,
     required double expectedAmount,
     int? iconIndex,
+    RecurrenceType recurrenceType = RecurrenceType.daily,
   }) async {
     final model = await _dataSource.addPlanItem(
       planId: planId,
@@ -156,8 +157,9 @@ class PlanRepositoryImpl implements PlanRepository {
       description: description,
       expectedAmount: expectedAmount,
       iconIndex: iconIndex,
+      recurrenceType: recurrenceType.value,
     );
-    _cachedPlanItems.remove(planId); // Invalidate only this plan's items
+    _cachedPlanItems.remove(planId);
     return model.toEntity();
   }
 

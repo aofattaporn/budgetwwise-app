@@ -46,6 +46,7 @@ abstract class PlanRepository {
     String? description,
     required double expectedAmount,
     int? iconIndex,
+    RecurrenceType recurrenceType = RecurrenceType.daily,
   });
 
   /// Update a plan item

@@ -1,5 +1,42 @@
 import 'package:equatable/equatable.dart';
 
+/// How often a plan item is expected to recur within the plan period.
+/// Used for end-of-period spend projection.
+enum RecurrenceType {
+  daily,
+  weekly,
+  monthly,
+  oneTime;
+
+  String get value => switch (this) {
+        RecurrenceType.daily => 'daily',
+        RecurrenceType.weekly => 'weekly',
+        RecurrenceType.monthly => 'monthly',
+        RecurrenceType.oneTime => 'one_time',
+      };
+
+  static RecurrenceType fromValue(String? value) => switch (value) {
+        'weekly' => RecurrenceType.weekly,
+        'monthly' => RecurrenceType.monthly,
+        'one_time' => RecurrenceType.oneTime,
+        _ => RecurrenceType.daily,
+      };
+
+  String get label => switch (this) {
+        RecurrenceType.daily => 'Daily',
+        RecurrenceType.weekly => 'Weekly',
+        RecurrenceType.monthly => 'Monthly',
+        RecurrenceType.oneTime => 'One-time',
+      };
+
+  String get description => switch (this) {
+        RecurrenceType.daily => 'Food, coffee, transport',
+        RecurrenceType.weekly => 'Gym, weekly subscription',
+        RecurrenceType.monthly => 'Rent, utilities, insurance',
+        RecurrenceType.oneTime => 'Car service, registration fee',
+      };
+}
+
 /// Plan item entity representing a budget category within a plan
 class PlanItem extends Equatable {
   final String id;
@@ -8,9 +45,10 @@ class PlanItem extends Equatable {
   final String? description;
   final double expectedAmount;
   final int? iconIndex;
+  final RecurrenceType recurrenceType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   /// Actual amount spent/received (calculated from transactions)
   final double actualAmount;
 
@@ -21,6 +59,7 @@ class PlanItem extends Equatable {
     this.description,
     required this.expectedAmount,
     this.iconIndex,
+    this.recurrenceType = RecurrenceType.daily,
     this.actualAmount = 0,
     this.createdAt,
     this.updatedAt,
@@ -60,6 +99,7 @@ class PlanItem extends Equatable {
     String? description,
     double? expectedAmount,
     int? iconIndex,
+    RecurrenceType? recurrenceType,
     double? actualAmount,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -71,6 +111,7 @@ class PlanItem extends Equatable {
       description: description ?? this.description,
       expectedAmount: expectedAmount ?? this.expectedAmount,
       iconIndex: iconIndex ?? this.iconIndex,
+      recurrenceType: recurrenceType ?? this.recurrenceType,
       actualAmount: actualAmount ?? this.actualAmount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -85,6 +126,7 @@ class PlanItem extends Equatable {
         description,
         expectedAmount,
         iconIndex,
+        recurrenceType,
         actualAmount,
         createdAt,
         updatedAt,

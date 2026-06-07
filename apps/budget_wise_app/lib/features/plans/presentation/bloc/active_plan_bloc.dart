@@ -137,6 +137,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
         description: event.description,
         expectedAmount: event.expectedAmount,
         iconIndex: event.iconIndex,
+        recurrenceType: event.recurrenceType,
       );
 
       emit(state.copyWith(
@@ -196,6 +197,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
         description: event.description,
         expectedAmount: event.expectedAmount,
         iconIndex: event.iconIndex,
+        recurrenceType: event.recurrenceType,
       );
 
       final result = await _planRepository.updatePlanItem(updatedItem);

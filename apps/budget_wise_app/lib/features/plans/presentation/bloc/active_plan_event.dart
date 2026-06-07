@@ -29,16 +29,18 @@ class AddPlanItemRequested extends ActivePlanEvent {
   final String? description;
   final double expectedAmount;
   final int? iconIndex;
+  final RecurrenceType recurrenceType;
 
   const AddPlanItemRequested({
     required this.name,
     this.description,
     required this.expectedAmount,
     this.iconIndex,
+    this.recurrenceType = RecurrenceType.daily,
   });
 
   @override
-  List<Object?> get props => [name, description, expectedAmount, iconIndex];
+  List<Object?> get props => [name, description, expectedAmount, iconIndex, recurrenceType];
 }
 
 /// Delete a plan item
@@ -58,6 +60,7 @@ class UpdatePlanItemRequested extends ActivePlanEvent {
   final String? description;
   final double? expectedAmount;
   final int? iconIndex;
+  final RecurrenceType? recurrenceType;
 
   const UpdatePlanItemRequested({
     required this.itemId,
@@ -65,10 +68,11 @@ class UpdatePlanItemRequested extends ActivePlanEvent {
     this.description,
     this.expectedAmount,
     this.iconIndex,
+    this.recurrenceType,
   });
 
   @override
-  List<Object?> get props => [itemId, name, description, expectedAmount];
+  List<Object?> get props => [itemId, name, description, expectedAmount, recurrenceType];
 }
 
 /// Create a new plan

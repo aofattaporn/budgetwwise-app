@@ -9,12 +9,12 @@ class PlanItemModel extends PlanItem {
     super.description,
     required super.expectedAmount,
     super.iconIndex,
+    super.recurrenceType,
     super.actualAmount,
     super.createdAt,
     super.updatedAt,
   });
 
-  /// Create PlanItemModel from JSON (Supabase response)
   factory PlanItemModel.fromJson(Map<String, dynamic> json) {
     return PlanItemModel(
       id: json['id'] as String,
@@ -23,6 +23,7 @@ class PlanItemModel extends PlanItem {
       description: json['description'] as String?,
       expectedAmount: (json['expected_amount'] as num).toDouble(),
       iconIndex: json['icon_index'] as int?,
+      recurrenceType: RecurrenceType.fromValue(json['recurrence_type'] as String?),
       actualAmount: json['actual_amount'] != null
           ? (json['actual_amount'] as num).toDouble()
           : 0,
@@ -35,17 +36,16 @@ class PlanItemModel extends PlanItem {
     );
   }
 
-  /// Convert PlanItemModel to JSON for Supabase
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'plan_id': planId,
       'name': name,
       'expected_amount': expectedAmount,
+      'recurrence_type': recurrenceType.value,
     };
   }
 
-  /// Convert to JSON for insert (without id)
   Map<String, dynamic> toInsertJson() {
     return {
       'plan_id': planId,
@@ -53,21 +53,21 @@ class PlanItemModel extends PlanItem {
       'description': description,
       'expected_amount': expectedAmount,
       'icon_index': iconIndex,
+      'recurrence_type': recurrenceType.value,
     };
   }
 
-  /// Convert to JSON for update
   Map<String, dynamic> toUpdateJson() {
     return {
       'name': name,
       'description': description,
       'expected_amount': expectedAmount,
       'icon_index': iconIndex,
+      'recurrence_type': recurrenceType.value,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
 
-  /// Create PlanItemModel from PlanItem entity
   factory PlanItemModel.fromEntity(PlanItem item) {
     return PlanItemModel(
       id: item.id,
@@ -76,13 +76,13 @@ class PlanItemModel extends PlanItem {
       description: item.description,
       expectedAmount: item.expectedAmount,
       iconIndex: item.iconIndex,
+      recurrenceType: item.recurrenceType,
       actualAmount: item.actualAmount,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     );
   }
 
-  /// Convert to PlanItem entity
   PlanItem toEntity() {
     return PlanItem(
       id: id,
@@ -91,13 +91,13 @@ class PlanItemModel extends PlanItem {
       description: description,
       expectedAmount: expectedAmount,
       iconIndex: iconIndex,
+      recurrenceType: recurrenceType,
       actualAmount: actualAmount,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
   }
 
-  /// Create a copy with actual amount
   PlanItemModel copyWithActual(double actual) {
     return PlanItemModel(
       id: id,
@@ -106,6 +106,7 @@ class PlanItemModel extends PlanItem {
       description: description,
       expectedAmount: expectedAmount,
       iconIndex: iconIndex,
+      recurrenceType: recurrenceType,
       actualAmount: actual,
       createdAt: createdAt,
       updatedAt: updatedAt,

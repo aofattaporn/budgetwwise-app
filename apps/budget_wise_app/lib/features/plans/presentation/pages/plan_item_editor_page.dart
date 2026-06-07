@@ -84,6 +84,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
 
   bool _isExpenseType = true;
   int _selectedIconIndex = 0;
+  RecurrenceType _selectedRecurrenceType = RecurrenceType.daily;
 
   // Reference shared icon list
   static List<PlanItemIcon> get _availableIcons => PlanItemIcon.all;
@@ -100,8 +101,8 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       _nameController.text = item.name;
       _amountController.text = item.expectedAmount.toStringAsFixed(2);
       _descriptionController.text = item.description ?? '';
-      // Use stored iconIndex if available, otherwise guess from name
       _selectedIconIndex = item.iconIndex ?? _findIconIndexByName(item.name);
+      _selectedRecurrenceType = item.recurrenceType;
     }
   }
 
@@ -164,6 +165,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
         'isExpense': _isExpenseType,
         'iconIndex': _selectedIconIndex,
         'description': _descriptionController.text.trim(),
+        'recurrenceType': _selectedRecurrenceType,
       };
 
       if (widget.existingItem != null) {
@@ -250,6 +252,11 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
 
                         // Planned Amount
                         _buildAmountField(),
+
+                        const SizedBox(height: 24),
+
+                        // Recurrence Type
+                        _buildRecurrenceSelector(),
 
                         const SizedBox(height: 24),
 
@@ -540,6 +547,83 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       ],
     );
   }
+
+  Widget _buildRecurrenceSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Recurrence *', style: context.styles.label),
+        const SizedBox(height: 4),
+        Text('How often will this expense occur?', style: context.styles.caption),
+        const SizedBox(height: 12),
+        ...RecurrenceType.values.map((type) {
+          final isSelected = _selectedRecurrenceType == type;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedRecurrenceType = type),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? context.colors.primary.withValues(alpha: 0.08)
+                    : context.colors.cardBg,
+                border: Border.all(
+                  color: isSelected
+                      ? context.colors.primary
+                      : context.colors.border,
+                  width: isSelected ? 1.5 : 0.5,
+                ),
+                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _recurrenceIcon(type),
+                    size: 18,
+                    color: isSelected
+                        ? context.colors.primary
+                        : context.colors.textSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          type.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: isSelected
+                                ? context.colors.primary
+                                : context.colors.textPrimary,
+                          ),
+                        ),
+                        Text(type.description, style: context.styles.caption),
+                      ],
+                    ),
+                  ),
+                  if (isSelected)
+                    Icon(Icons.check_circle,
+                        size: 18, color: context.colors.primary),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  IconData _recurrenceIcon(RecurrenceType type) => switch (type) {
+        RecurrenceType.daily => Icons.today_outlined,
+        RecurrenceType.weekly => Icons.view_week_outlined,
+        RecurrenceType.monthly => Icons.calendar_month_outlined,
+        RecurrenceType.oneTime => Icons.looks_one_outlined,
+      };
 
   Widget _buildDescriptionField() {
     return Column(

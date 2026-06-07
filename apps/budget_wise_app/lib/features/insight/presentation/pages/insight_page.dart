@@ -244,6 +244,8 @@ class _InsightPageState extends State<InsightPage> {
         child: Column(
           children: [
             _buildSummaryCards(state),
+            const SizedBox(height: 16),
+            _buildPacingBanner(state),
             const SizedBox(height: 20),
             _buildInlineHeatmap(state),
             const SizedBox(height: 20),
@@ -975,6 +977,177 @@ class _InsightPageState extends State<InsightPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PERIOD PACING BANNER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildPacingBanner(InsightState state) {
+    if (state.totalBudget == 0) return const SizedBox.shrink();
+
+    final pacing = state.pacingStatus;
+    final elapsed = state.periodElapsedDays;
+    final total = state.periodTotalDays;
+    final timePct = state.periodProgressPct;
+    final spentPct = state.budgetSpentPct.clamp(0.0, 1.0);
+    final dailyRemaining = state.dailyBudgetRemaining;
+    final remaining = state.periodRemainingDays;
+
+    final Color statusColor;
+    final IconData statusIcon;
+    final String statusLabel;
+    switch (pacing) {
+      case PacingStatus.underPace:
+        statusColor = context.colors.income;
+        statusIcon = Icons.check_circle_outline;
+        statusLabel = 'Under pace';
+      case PacingStatus.overPace:
+        statusColor = context.colors.expense;
+        statusIcon = Icons.warning_amber_rounded;
+        statusLabel = 'Over pace';
+      case PacingStatus.onPace:
+        statusColor = context.colors.accent;
+        statusIcon = Icons.radio_button_checked;
+        statusLabel = 'On track';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Budget Pace', style: context.styles.titleMedium),
+              const Spacer(),
+              Icon(statusIcon, size: 14, color: statusColor),
+              const SizedBox(width: 4),
+              Text(
+                statusLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Day $elapsed of $total  ·  $remaining days left',
+            style: context.styles.caption,
+          ),
+          const SizedBox(height: 14),
+          _pacingRow(
+            label: 'Time',
+            pct: timePct,
+            barColor: context.colors.accent,
+            trailing: '${(timePct * 100).toStringAsFixed(0)}%',
+          ),
+          const SizedBox(height: 8),
+          _pacingRow(
+            label: 'Spent',
+            pct: spentPct,
+            barColor: pacing == PacingStatus.overPace
+                ? context.colors.expense
+                : context.colors.income,
+            trailing: '${(state.budgetSpentPct * 100).toStringAsFixed(0)}%',
+          ),
+          if (dailyRemaining > 0 && remaining > 0) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.calendar_today_outlined,
+                    size: 12, color: context.colors.textTertiary),
+                const SizedBox(width: 6),
+                Text(
+                  '${CurrencyUtils.formatCurrency(dailyRemaining)}/day to stay on budget',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ] else if (state.totalExpense > state.totalBudget) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.info_outline,
+                    size: 12, color: context.colors.expense),
+                const SizedBox(width: 6),
+                Text(
+                  'Over budget by ${CurrencyUtils.formatCurrency(state.totalExpense - state.totalBudget)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.expense,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _pacingRow({
+    required String label,
+    required double pct,
+    required Color barColor,
+    required String trailing,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 38,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 11, color: context.colors.textTertiary),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: Stack(
+              children: [
+                Container(
+                  height: 8,
+                  color: context.colors.border.withValues(alpha: 0.5),
+                ),
+                FractionallySizedBox(
+                  widthFactor: pct.clamp(0.0, 1.0),
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: barColor.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 36,
+          child: Text(
+            trailing,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: context.colors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

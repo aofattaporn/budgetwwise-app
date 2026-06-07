@@ -59,6 +59,8 @@ class DailyCategoryAmount extends Equatable {
   List<Object?> get props => [date, categoryName, amount, txCount];
 }
 
+enum PacingStatus { underPace, onPace, overPace }
+
 /// Private key for grouping by (date, category).
 class _DayCategory {
   final DateTime date;
@@ -290,6 +292,53 @@ class InsightState extends Equatable {
             DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day))
         .toSet()
         .length;
+  }
+
+  // ── Period pacing ──────────────────────────────────────────
+
+  int get periodTotalDays {
+    final start = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final end = DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
+    return end.difference(start).inDays + 1;
+  }
+
+  int get periodElapsedDays {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final end = DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
+    if (today.isBefore(start)) return 0;
+    if (today.isAfter(end)) return periodTotalDays;
+    return today.difference(start).inDays + 1;
+  }
+
+  int get periodRemainingDays =>
+      (periodTotalDays - periodElapsedDays).clamp(0, periodTotalDays);
+
+  double get periodProgressPct {
+    final total = periodTotalDays;
+    return total > 0 ? (periodElapsedDays / total).clamp(0.0, 1.0) : 0.0;
+  }
+
+  double get budgetSpentPct =>
+      totalBudget > 0 ? (totalExpense / totalBudget).clamp(0.0, 2.0) : 0.0;
+
+  /// How much budget remains per day for the rest of the period.
+  double get dailyBudgetRemaining {
+    final remaining = totalBudget - totalExpense;
+    final days = periodRemainingDays;
+    if (days <= 0 || remaining <= 0) return 0;
+    return remaining / days;
+  }
+
+  /// Whether spending is ahead of, behind, or in sync with the period timeline.
+  /// Uses a ±5 percentage-point buffer to avoid flickering on "on track".
+  PacingStatus get pacingStatus {
+    if (totalBudget == 0) return PacingStatus.onPace;
+    final diff = budgetSpentPct - periodProgressPct;
+    if (diff > 0.05) return PacingStatus.overPace;
+    if (diff < -0.05) return PacingStatus.underPace;
+    return PacingStatus.onPace;
   }
 
   InsightState copyWith({

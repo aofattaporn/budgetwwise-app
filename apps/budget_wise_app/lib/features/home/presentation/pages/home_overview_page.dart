@@ -255,12 +255,11 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(state),
-            _buildTotalBalanceCard(state),
             if (state.hasActivePlan) _buildBudgetSummaryCard(state),
             if (state.hasActivePlan) _buildCashFlowSummary(state),
             if (!state.hasActivePlan) _buildNoPlanCard(),
-            _buildAccountsSection(state),
-            _buildRecentTransactionsSection(),
+            _buildTodayItemsCard(state),
+            _buildAccountsCard(state),
             const SizedBox(height: 100),
           ],
         ),
@@ -300,35 +299,102 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILD - TOTAL BALANCE CARD
+  // BUILD - TODAY'S ITEMS CARD
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildTotalBalanceCard(HomeState state) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: context.styles.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  /// Compact summary of today's activity. Tapping opens a bottom sheet that
+  /// lists every transaction logged today.
+  Widget _buildTodayItemsCard(HomeState state) {
+    final items = state.todayTransactions;
+    final count = items.length;
+    final expenseTotal = state.todayExpenseTotal;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: GestureDetector(
+        onTap: count == 0 ? null : () => _showTodayItemsSheet(state),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: context.styles.card,
+          child: Row(
             children: [
-              Text('Total Balance', style: context.styles.label),
-              Text(
-                '${state.accountCount} ${state.accountCount == 1 ? 'account' : 'accounts'}',
-                style: context.styles.caption,
+              context.styles.iconBox(
+                icon: Icons.today_rounded,
+                bgColor: context.colors.accent.withValues(alpha: 0.08),
+                iconColor: context.colors.accent,
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Items Today', style: context.styles.bodyLarge),
+                    const SizedBox(height: 2),
+                    Text(
+                      count == 0
+                          ? 'No transactions yet today'
+                          : '$count ${count == 1 ? 'item' : 'items'} · spent ${CurrencyUtils.formatCurrency(expenseTotal)}',
+                      style: context.styles.caption,
+                    ),
+                  ],
+                ),
+              ),
+              if (count > 0)
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textTertiary),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            CurrencyUtils.formatCurrency(state.totalBalance),
-            style: context.styles.displayLarge,
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  void _showTodayItemsSheet(HomeState state) {
+    final items = state.todayTransactions;
+    final dateLabel = DateFormat('EEEE, MMM d').format(DateTime.now());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.scaffoldBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.75,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                context.styles.sheetHandle(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text('Today', style: context.styles.titleLarge),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: Text(
+                    '$dateLabel · ${items.length} ${items.length == 1 ? 'item' : 'items'}',
+                    style: context.styles.caption,
+                  ),
+                ),
+                Flexible(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    shrinkWrap: true,
+                    children: items.map(_buildTransactionRow).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -432,7 +498,8 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(
         children: [
-          Row(
+          IntrinsicHeight(
+            child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
@@ -459,8 +526,10 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
               ),
             ],
           ),
+          ),
           const SizedBox(height: 12),
-          Row(
+          IntrinsicHeight(
+            child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
@@ -485,6 +554,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
                 ),
               ),
             ],
+          ),
           ),
         ],
       ),
@@ -555,40 +625,99 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILD - ACCOUNTS SECTION
+  // BUILD - ACCOUNTS CARD
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAccountsSection(HomeState state) {
+  /// Compact summary of all accounts. Tapping opens a bottom sheet that lists
+  /// every account with its balance.
+  Widget _buildAccountsCard(HomeState state) {
+    final count = state.accountCount;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Accounts', style: context.styles.titleMedium),
-          const SizedBox(height: 12),
-          if (state.accounts.isEmpty)
-            _buildNoAccountsCard()
-          else
-            ...state.accounts.map(_buildAccountRow),
-        ],
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: GestureDetector(
+        onTap: count == 0 ? null : () => _showAccountsSheet(state),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: context.styles.card,
+          child: Row(
+            children: [
+              context.styles.iconBox(
+                icon: Icons.account_balance_wallet_rounded,
+                bgColor: context.colors.accent.withValues(alpha: 0.08),
+                iconColor: context.colors.accent,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Accounts', style: context.styles.bodyLarge),
+                    const SizedBox(height: 2),
+                    Text(
+                      count == 0
+                          ? 'No accounts yet'
+                          : '$count ${count == 1 ? 'account' : 'accounts'} · ${CurrencyUtils.formatCurrency(state.totalBalance)}',
+                      style: context.styles.caption,
+                    ),
+                  ],
+                ),
+              ),
+              if (count > 0)
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textTertiary),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildNoAccountsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: context.styles.card,
-      child: Column(
-        children: [
-          Icon(Icons.account_balance_wallet_outlined, size: 32, color: context.colors.textTertiary),
-          const SizedBox(height: 12),
-          Text('No accounts yet', style: context.styles.bodyLarge),
-          const SizedBox(height: 4),
-          Text('Add an account to start tracking', style: context.styles.bodySmall),
-        ],
+  void _showAccountsSheet(HomeState state) {
+    final accounts = state.accounts;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.scaffoldBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.75,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                context.styles.sheetHandle(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text('Accounts', style: context.styles.titleLarge),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: Text(
+                    'Total ${CurrencyUtils.formatCurrency(state.totalBalance)}',
+                    style: context.styles.caption,
+                  ),
+                ),
+                Flexible(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    shrinkWrap: true,
+                    children: accounts.map(_buildAccountRow).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -653,46 +782,8 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILD - RECENT TRANSACTIONS SECTION
+  // BUILD - TRANSACTION ROW (shared by the Today bottom sheet)
   // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildRecentTransactionsSection() {
-    return BlocBuilder<HomeBloc, HomeState>(
-      builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Recent Transactions', style: context.styles.titleMedium),
-              const SizedBox(height: 12),
-              if (state.recentTransactions.isEmpty)
-                _buildNoTransactionsCard()
-              else
-                ...state.recentTransactions.map(_buildTransactionRow),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildNoTransactionsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: context.styles.card,
-      child: Column(
-        children: [
-          Icon(Icons.receipt_long_outlined, size: 32, color: context.colors.textTertiary),
-          const SizedBox(height: 12),
-          Text('No transactions yet', style: context.styles.bodyLarge),
-          const SizedBox(height: 4),
-          Text('Transactions will appear here once recorded', style: context.styles.bodySmall),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTransactionRow(Transaction txn) {
     final dateFormat = DateFormat('MMM d, HH:mm');

@@ -25,6 +25,13 @@ class InsightPage extends StatefulWidget {
 class _InsightPageState extends State<InsightPage> {
   late final InsightChatCubit _chatCubit;
 
+  /// Category selected for the cumulative-vs-pace chart. Null = auto-pick the
+  /// highest-spend category for the current plan.
+  String? _cumulativeCategory;
+
+  /// Whether the Category Status list body is expanded.
+  bool _showCategoryStatus = true;
+
   @override
   void initState() {
     super.initState();
@@ -249,6 +256,14 @@ class _InsightPageState extends State<InsightPage> {
             const SizedBox(height: 20),
             _buildInlineHeatmap(state),
             const SizedBox(height: 20),
+            if (state.categoryInsights.isNotEmpty) ...[
+              _buildCategoryStatusList(state),
+              const SizedBox(height: 20),
+            ],
+            if (state.totalBudget > 0) ...[
+              _buildCumulativePaceChart(state),
+              const SizedBox(height: 20),
+            ],
             if (state.overspentCategories.isNotEmpty) ...[
               _buildOverspendList(state),
               const SizedBox(height: 20),
@@ -347,6 +362,386 @@ class _InsightPageState extends State<InsightPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY STATUS LIST (สถานะรายหมวด)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Per-category budget vs actual, sorted by % used (highest first), each with
+  /// a usage bar and a status pill. Mirrors the report's "สถานะรายหมวด" table.
+  Widget _buildCategoryStatusList(InsightState state) {
+    final cats = state.categoryInsights
+        .where((c) => c.budget > 0 || c.actual > 0)
+        .toList()
+      ..sort((a, b) => b.percentage.compareTo(a.percentage));
+    if (cats.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                setState(() => _showCategoryStatus = !_showCategoryStatus),
+            child: Row(
+              children: [
+                Text('Category Status', style: context.styles.titleMedium),
+                const Spacer(),
+                Text(
+                  '${cats.length} categor${cats.length == 1 ? 'y' : 'ies'}',
+                  style: context.styles.caption,
+                ),
+                const SizedBox(width: 6),
+                AnimatedRotation(
+                  turns: _showCategoryStatus ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(Icons.expand_more,
+                      size: 22, color: context.colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (_showCategoryStatus) ...[
+            const SizedBox(height: 12),
+            ...cats.map(_buildCategoryStatusRow),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryStatusRow(CategoryInsight cat) {
+    const amber = Color(0xFFF59E0B);
+    final hasBudget = cat.budget > 0;
+    final ratio = hasBudget ? cat.actual / cat.budget : 0.0;
+    final pctText = hasBudget ? '${(ratio * 100).toStringAsFixed(0)}%' : '—';
+
+    final Color statusColor;
+    final String statusText;
+    if (!hasBudget) {
+      statusColor = context.colors.textTertiary;
+      statusText = 'No budget';
+    } else if (cat.isOverBudget) {
+      statusColor = context.colors.expense;
+      statusText = 'Over ${CurrencyUtils.formatCurrency(cat.overAmount)}';
+    } else if (ratio >= 0.999) {
+      statusColor = amber;
+      statusText = 'Full';
+    } else if (ratio >= 0.85) {
+      statusColor = amber;
+      statusText = '${CurrencyUtils.formatCurrency(cat.remaining)} left';
+    } else {
+      statusColor = context.colors.income;
+      statusText = '${CurrencyUtils.formatCurrency(cat.remaining)} left';
+    }
+
+    final barColor = !hasBudget
+        ? context.colors.textTertiary
+        : cat.isOverBudget
+            ? context.colors.expense
+            : ratio >= 0.85
+                ? amber
+                : context.colors.accent;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(cat.name, style: context.styles.bodyLarge),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  hasBudget
+                      ? '${CurrencyUtils.formatCurrency(cat.actual)} / ${CurrencyUtils.formatCurrency(cat.budget)}'
+                      : CurrencyUtils.formatCurrency(cat.actual),
+                  style: context.styles.caption,
+                ),
+              ),
+              Text(
+                pctText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: Stack(
+              children: [
+                Container(height: 6, color: context.colors.divider),
+                FractionallySizedBox(
+                  widthFactor: ratio.clamp(0.0, 1.0),
+                  child: Container(
+                    height: 6,
+                    color: barColor.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CUMULATIVE SPEND VS PACE CHART (Food สะสม vs เส้น pace)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Cumulative spending of a chosen category vs the straight "ideal pace" line
+  /// (budget ÷ period days). Mirrors the report's "Food สะสม vs เส้น pace".
+  Widget _buildCumulativePaceChart(InsightState state) {
+    final budgeted = state.categoryInsights
+        .where((c) => c.budget > 0)
+        .toList()
+      ..sort((a, b) => b.actual.compareTo(a.actual));
+    if (budgeted.isEmpty) return const SizedBox.shrink();
+
+    // Resolve the selected category, defaulting to the highest-spend one.
+    final selectedName = budgeted.any((c) => c.name == _cumulativeCategory)
+        ? _cumulativeCategory!
+        : budgeted.first.name;
+    final selected = budgeted.firstWhere((c) => c.name == selectedName);
+    final budget = selected.budget;
+
+    // Ordered list of every day in the period.
+    final days = state.dailyAmounts.map((d) => d.date).toList();
+    if (days.isEmpty) return const SizedBox.shrink();
+    final totalDays = days.length;
+
+    // Per-day spend for the selected category.
+    final perDay = <DateTime, double>{};
+    for (final e in state.dailyCategoryAmounts) {
+      if (e.categoryName != selectedName) continue;
+      final key = DateTime(e.date.year, e.date.month, e.date.day);
+      perDay[key] = (perDay[key] ?? 0) + e.amount;
+    }
+
+    // Build cumulative + pace series. Cumulative stops growing on days that
+    // have no spend; pace rises linearly to the full budget.
+    final cumulativeSpots = <FlSpot>[];
+    final paceSpots = <FlSpot>[];
+    final perDayPace = budget / totalDays;
+    double running = 0;
+    for (int i = 0; i < totalDays; i++) {
+      running += perDay[days[i]] ?? 0;
+      cumulativeSpots.add(FlSpot(i.toDouble(), running));
+      paceSpots.add(FlSpot(i.toDouble(), perDayPace * (i + 1)));
+    }
+
+    final cumColor =
+        selected.isOverBudget ? context.colors.expense : context.colors.accent;
+    final maxY = [running, budget].reduce((a, b) => a > b ? a : b) * 1.15;
+    final dateFormat = DateFormat('M/d');
+    final labelInterval =
+        (totalDays / 5).ceil().toDouble().clamp(1.0, double.infinity);
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('Cumulative vs Pace',
+                    style: context.styles.titleMedium),
+              ),
+              _buildCategoryDropdown(budgeted, selectedName),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Budget ${CurrencyUtils.formatCurrency(budget)} ÷ $totalDays days = '
+            '${CurrencyUtils.formatCurrency(perDayPace)}/day',
+            style: context.styles.caption,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY / 4,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: context.colors.divider,
+                    strokeWidth: 0.5,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 48,
+                      getTitlesWidget: (value, meta) {
+                        if (value == meta.max) return const SizedBox.shrink();
+                        return Text(
+                          _formatCompact(value),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: context.colors.textTertiary,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: labelInterval,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= totalDays) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            dateFormat.format(days[idx]),
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: context.colors.textTertiary,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: (totalDays - 1).toDouble(),
+                minY: 0,
+                maxY: maxY == 0 ? 1 : maxY,
+                lineBarsData: [
+                  // Cumulative actual spend
+                  LineChartBarData(
+                    spots: cumulativeSpots,
+                    isCurved: true,
+                    preventCurveOverShooting: true,
+                    color: cumColor,
+                    barWidth: 2.5,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: cumColor.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  // Ideal pace line (dashed)
+                  LineChartBarData(
+                    spots: paceSpots,
+                    isCurved: false,
+                    color: context.colors.textTertiary,
+                    barWidth: 1.5,
+                    dashArray: [5, 5],
+                    dotData: const FlDotData(show: false),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final isCum = spot.barIndex == 0;
+                        final idx = spot.x.toInt().clamp(0, totalDays - 1);
+                        final date = dateFormat.format(days[idx]);
+                        return LineTooltipItem(
+                          '$date\n${isCum ? 'Spent' : 'Pace'}: ${CurrencyUtils.formatCurrency(spot.y)}',
+                          TextStyle(
+                            color: isCum
+                                ? cumColor
+                                : context.colors.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendDot(cumColor, 'Cumulative'),
+              const SizedBox(width: 20),
+              _buildLegendDot(context.colors.textTertiary, 'Ideal pace'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(
+      List<CategoryInsight> categories, String selectedName) {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selectedName,
+        isDense: true,
+        borderRadius: BorderRadius.circular(8),
+        dropdownColor: context.colors.cardBg,
+        icon: Icon(Icons.arrow_drop_down, color: context.colors.textSecondary),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: context.colors.accent,
+        ),
+        items: categories
+            .map((c) => DropdownMenuItem(
+                  value: c.name,
+                  child: Text(c.name),
+                ))
+            .toList(),
+        onChanged: (value) {
+          if (value != null) setState(() => _cumulativeCategory = value);
+        },
       ),
     );
   }

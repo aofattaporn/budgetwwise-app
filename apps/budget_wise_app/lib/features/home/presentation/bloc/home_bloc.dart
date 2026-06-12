@@ -59,6 +59,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final recentTransactions =
           await _transactionRepository.getRecentTransactions(limit: 5);
 
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+      final todayTransactions =
+          await _transactionRepository.getTransactionsByDateRange(
+        start: todayStart,
+        end: todayEnd,
+      );
+
       emit(state.copyWith(
         status: HomeStatus.loaded,
         activePlan: activePlan,
@@ -66,6 +75,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         actualIncome: actualIncome,
         accounts: accounts,
         recentTransactions: recentTransactions,
+        todayTransactions: todayTransactions,
         clearPlan: activePlan == null,
       ));
     } catch (e) {

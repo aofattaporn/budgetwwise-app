@@ -9,6 +9,7 @@ class HomeState extends Equatable {
   final double actualIncome;
   final List<Account> accounts;
   final List<Transaction> recentTransactions;
+  final List<Transaction> todayTransactions;
   final String? errorMessage;
 
   const HomeState({
@@ -18,6 +19,7 @@ class HomeState extends Equatable {
     this.actualIncome = 0,
     this.accounts = const [],
     this.recentTransactions = const [],
+    this.todayTransactions = const [],
     this.errorMessage,
   });
 
@@ -55,6 +57,11 @@ class HomeState extends Equatable {
   /// Formula: total balance − total planned budget + income received so far.
   double get freeCash => totalBalance - totalPlannedExpenses + actualIncome;
 
+  /// Total expense logged today (transfers and income excluded).
+  double get todayExpenseTotal => todayTransactions
+      .where((t) => t.type == TransactionType.expense)
+      .fold(0, (sum, t) => sum + t.amount);
+
   HomeState copyWith({
     HomeStatus? status,
     Plan? activePlan,
@@ -62,6 +69,7 @@ class HomeState extends Equatable {
     double? actualIncome,
     List<Account>? accounts,
     List<Transaction>? recentTransactions,
+    List<Transaction>? todayTransactions,
     String? errorMessage,
     bool clearPlan = false,
   }) {
@@ -72,6 +80,7 @@ class HomeState extends Equatable {
       actualIncome: actualIncome ?? this.actualIncome,
       accounts: accounts ?? this.accounts,
       recentTransactions: recentTransactions ?? this.recentTransactions,
+      todayTransactions: todayTransactions ?? this.todayTransactions,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -84,6 +93,7 @@ class HomeState extends Equatable {
         actualIncome,
         accounts,
         recentTransactions,
+        todayTransactions,
         errorMessage,
       ];
 }

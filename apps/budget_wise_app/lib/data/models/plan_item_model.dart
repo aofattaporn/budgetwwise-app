@@ -28,10 +28,10 @@ class PlanItemModel extends PlanItem {
           ? (json['actual_amount'] as num).toDouble()
           : 0,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.parse(json['created_at'] as String).toLocal()
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.parse(json['updated_at'] as String).toLocal()
           : null,
     );
   }

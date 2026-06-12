@@ -29,8 +29,8 @@ class AccountModel extends Equatable {
         openingBalance: double.parse(json['opening_balance'].toString()),
         balance: double.parse(json['balance'].toString()),
         currency: json['currency'] as String,
-        createdAt: DateTime.parse(json['created_at']),
-        updatedAt: DateTime.parse(json['updated_at']),
+        createdAt: DateTime.parse(json['created_at']).toLocal(),
+        updatedAt: DateTime.parse(json['updated_at']).toLocal(),
       );
 
   Map<String, dynamic> toJson() => {

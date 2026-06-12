@@ -22,7 +22,7 @@ class ChatMessage extends Equatable {
       id: json['id'] as String?,
       text: json['content'] as String,
       isUser: json['role'] == 'user',
-      timestamp: DateTime.parse(json['created_at'] as String),
+      timestamp: DateTime.parse(json['created_at'] as String).toLocal(),
     );
   }
 

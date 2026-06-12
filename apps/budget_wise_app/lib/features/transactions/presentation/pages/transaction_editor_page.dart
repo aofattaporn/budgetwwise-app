@@ -475,7 +475,7 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
 
   Widget _buildDateTimeSelector(TransactionEditorState state) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('h:mm a');
+    final timeFormat = DateFormat('HH:mm');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

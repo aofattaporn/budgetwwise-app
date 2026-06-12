@@ -576,7 +576,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   }
 
   Widget _buildTransactionRow(Transaction txn) {
-    final dateFormat = DateFormat('MMM d, h:mm a');
+    final dateFormat = DateFormat('MMM d, HH:mm');
     final isExpense = txn.type == TransactionType.expense;
     final isIncome = txn.type == TransactionType.income;
 

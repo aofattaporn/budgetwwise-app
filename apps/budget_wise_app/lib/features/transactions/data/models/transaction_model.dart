@@ -35,12 +35,12 @@ class TransactionModel extends Equatable {
         type: json['type'] as String,
         amount: double.parse(json['amount'].toString()),
         description: json['description'] as String?,
-        occurredAt: DateTime.parse(json['occurred_at']),
+        occurredAt: DateTime.parse(json['occurred_at']).toLocal(),
         createdAt: json['created_at'] != null
-            ? DateTime.parse(json['created_at'])
+            ? DateTime.parse(json['created_at']).toLocal()
             : null,
         updatedAt: json['updated_at'] != null
-            ? DateTime.parse(json['updated_at'])
+            ? DateTime.parse(json['updated_at']).toLocal()
             : null,
       );
 
@@ -52,9 +52,9 @@ class TransactionModel extends Equatable {
         'type': type,
         'amount': amount,
         'description': description,
-        'occurred_at': occurredAt.toIso8601String(),
-        'created_at': createdAt?.toIso8601String(),
-        'updated_at': updatedAt?.toIso8601String(),
+        'occurred_at': occurredAt.toUtc().toIso8601String(),
+        'created_at': createdAt?.toUtc().toIso8601String(),
+        'updated_at': updatedAt?.toUtc().toIso8601String(),
       };
 
   Transaction toEntity() => Transaction(

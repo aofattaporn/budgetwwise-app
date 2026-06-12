@@ -32,7 +32,7 @@ class TransactionRemoteDataSource {
         'type': transaction.type,
         'amount': transaction.amount,
         'description': transaction.description,
-        'occurred_at': transaction.occurredAt.toIso8601String(),
+        'occurred_at': transaction.occurredAt.toUtc().toIso8601String(),
       };
 
       final response =
@@ -54,8 +54,8 @@ class TransactionRemoteDataSource {
         'type': transaction.type,
         'amount': transaction.amount,
         'description': transaction.description,
-        'occurred_at': transaction.occurredAt.toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
+        'occurred_at': transaction.occurredAt.toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await client
@@ -130,8 +130,8 @@ class TransactionRemoteDataSource {
       final response = await client
           .from(_tableName)
           .select()
-          .gte('occurred_at', start.toIso8601String())
-          .lte('occurred_at', end.toIso8601String())
+          .gte('occurred_at', start.toUtc().toIso8601String())
+          .lte('occurred_at', end.toUtc().toIso8601String())
           .order('occurred_at', ascending: false);
 
       return (response as List)

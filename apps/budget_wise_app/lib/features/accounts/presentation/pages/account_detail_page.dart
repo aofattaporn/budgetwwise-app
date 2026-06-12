@@ -353,7 +353,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   }
 
   Widget _buildTransactionRow(Transaction txn) {
-    final timeFormat = DateFormat('MMM d, h:mm a');
+    final timeFormat = DateFormat('MMM d, HH:mm');
     final isExpense = txn.type == TransactionType.expense;
     final isIncome = txn.type == TransactionType.income;
 

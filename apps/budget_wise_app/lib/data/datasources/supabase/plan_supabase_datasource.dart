@@ -242,8 +242,8 @@ class PlanSupabaseDataSource implements PlanDataSource {
           .from('transactions')
           .select('amount')
           .eq('type', 'income')
-          .gte('occurred_at', plan.startDate.toIso8601String())
-          .lte('occurred_at', plan.endDate.toIso8601String());
+          .gte('occurred_at', plan.startDate.toUtc().toIso8601String())
+          .lte('occurred_at', plan.endDate.toUtc().toIso8601String());
 
       double total = 0;
       for (final row in response as List) {

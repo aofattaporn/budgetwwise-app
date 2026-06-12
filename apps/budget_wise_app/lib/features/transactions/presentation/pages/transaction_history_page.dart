@@ -693,7 +693,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 
   Widget _buildTransactionRow(Transaction txn) {
-    final timeFormat = DateFormat('h:mm a');
+    final timeFormat = DateFormat('HH:mm');
     final isExpense = txn.type == TransactionType.expense;
     final isIncome = txn.type == TransactionType.income;
     final isUnplanned = isExpense && txn.planItemId == null;

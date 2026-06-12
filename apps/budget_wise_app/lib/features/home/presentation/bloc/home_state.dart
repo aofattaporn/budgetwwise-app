@@ -37,6 +37,24 @@ class HomeState extends Equatable {
   double get remainingBudget =>
       (activePlan?.expectedIncome ?? 0) - totalActualExpenses;
 
+  /// Total amount overspent across categories that exceeded their budget.
+  /// Sums only the positive overspend (`overAmount`) of each over-budget item.
+  double get totalOverrun =>
+      planItems.fold(0, (sum, item) => sum + item.overAmount);
+
+  /// Budget still genuinely available to spend: the leftover room counting
+  /// only items that are still within budget (over-budget items contribute 0,
+  /// not a negative). Differs from [remainingBudget], which can be dragged
+  /// down by overspend on other categories.
+  double get realRemainingBudget => planItems.fold(
+        0,
+        (sum, item) => sum + (item.remainingAmount > 0 ? item.remainingAmount : 0),
+      );
+
+  /// Cash you can freely use this period.
+  /// Formula: total balance − total planned budget + income received so far.
+  double get freeCash => totalBalance - totalPlannedExpenses + actualIncome;
+
   HomeState copyWith({
     HomeStatus? status,
     Plan? activePlan,

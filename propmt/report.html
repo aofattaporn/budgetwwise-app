@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BudgetWise — June 2026 Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --surface: #11151f;
+        --surface2: #161b28;
+        --line: #232a3b;
+        --txt: #e6e9f0;
+        --muted: #8b93a7;
+        --dim: #5a6275;
+        --accent: #5eead4;
+        --warn: #fbbf24;
+        --danger: #fb7185;
+        --info: #818cf8;
+        --ok: #4ade80;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--txt);
+        font-family: "Space Mono", ui-monospace, Menlo, monospace;
+        line-height: 1.55;
+        padding: 32px 20px 80px;
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      h1 {
+        font-size: clamp(26px, 4vw, 40px);
+        font-weight: 700;
+        margin: 6px 0 2px;
+      }
+      h1 .tint {
+        color: var(--accent);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      h2 {
+        font-size: 15px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 46px 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      h2::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+
+      /* burn hero */
+      .burn {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 26px;
+        margin-bottom: 18px;
+        animation: rise 0.5s ease both;
+      }
+      .burn .row {
+        margin-bottom: 18px;
+      }
+      .burn label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+      .burn label b {
+        color: var(--txt);
+      }
+      .bar {
+        height: 12px;
+        background: var(--surface2);
+        border-radius: 99px;
+        overflow: hidden;
+        position: relative;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        border-radius: 99px;
+        width: 0;
+        transition: width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .bar .t {
+        background: linear-gradient(90deg, #475569, var(--info));
+      }
+      .bar .m {
+        background: linear-gradient(
+          90deg,
+          #0d9488,
+          var(--accent) 70%,
+          var(--danger)
+        );
+      }
+      .burn .verdict {
+        font-size: 13px;
+        color: var(--warn);
+        margin-top: 4px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .g4 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      .g2 {
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px 22px;
+        animation: rise 0.5s ease both;
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: #33405c;
+      }
+      .card .k {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 8px;
+      }
+      .card .v {
+        font-size: 26px;
+        font-weight: 700;
+      }
+      .card .d {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .pos {
+        color: var(--ok);
+      }
+      .neg {
+        color: var(--danger);
+      }
+      .wn {
+        color: var(--warn);
+      }
+      .ac {
+        color: var(--accent);
+      }
+      .in {
+        color: var(--info);
+      }
+
+      .chartbox {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px;
+        animation: rise 0.6s ease both;
+      }
+      .chartbox h3 {
+        font-size: 13px;
+        color: var(--txt);
+        margin-bottom: 4px;
+      }
+      .chartbox p {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+      .ch {
+        position: relative;
+        height: 300px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      th {
+        font-size: 10.5px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--dim);
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      td {
+        padding: 9px 10px;
+        border-bottom: 1px solid #1a2030;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td.r,
+      th.r {
+        text-align: right;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 99px;
+        font-size: 10.5px;
+      }
+      .pill.over {
+        background: rgba(251, 113, 133, 0.12);
+        color: var(--danger);
+      }
+      .pill.ok {
+        background: rgba(74, 222, 128, 0.1);
+        color: var(--ok);
+      }
+      .pill.watch {
+        background: rgba(251, 191, 36, 0.12);
+        color: var(--warn);
+      }
+
+      .insight {
+        border-left: 3px solid var(--accent);
+        background: var(--surface);
+        border-radius: 0 12px 12px 0;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        animation: rise 0.6s ease both;
+      }
+      .insight.red {
+        border-left-color: var(--danger);
+      }
+      .insight.yellow {
+        border-left-color: var(--warn);
+      }
+      .insight b {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+      .insight span {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      .foot {
+        margin-top: 40px;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow">budgetwise · monthly analysis</div>
+      <h1>June 2026 <span class="tint">// burn report</span></h1>
+      <div class="sub">
+        รอบงบ 25 พ.ค. – 25 มิ.ย. 2569 · ข้อมูล ณ 10 มิ.ย. (วันที่ 17/31 ของรอบ)
+        · ดึงสดจาก Supabase
+      </div>
+
+      <!-- HERO: time vs money burn -->
+      <div class="burn">
+        <div class="row">
+          <label><span>เวลาผ่านไป</span><b>วันที่ 17 / 31 — 55%</b></label>
+          <div class="bar"><i class="t" data-w="55"></i></div>
+        </div>
+        <div class="row">
+          <label
+            ><span>งบแผนถูกใช้ไป</span><b>19,845 / 19,800 — 100.2%</b></label
+          >
+          <div class="bar"><i class="m" data-w="100"></i></div>
+        </div>
+        <div class="verdict">
+          ⚠ งบทั้งรอบถูกใช้ครบแล้ว ทั้งที่เหลือเวลาอีก 15 วัน —
+          เงินวิ่งเร็วกว่าเวลาเกือบ 2 เท่า
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="grid g4">
+        <div class="card">
+          <div class="k">Balance รวมทุกบัญชี</div>
+          <div class="v">฿13,818.80</div>
+          <div class="d">97.4% อยู่ใน BBL + SCB Online</div>
+        </div>
+        <div class="card">
+          <div class="k">Free Cash</div>
+          <div class="v wn">฿1,116.16</div>
+          <div class="d">13,818.80 − 19,800 + 7,097.36</div>
+        </div>
+        <div class="card">
+          <div class="k">Overrun แล้ว</div>
+          <div class="v neg">฿3,500</div>
+          <div class="d">อ้น +2,000 · รถเข้าศูนย์ +1,500</div>
+        </div>
+        <div class="card">
+          <div class="k">งบที่เหลือใช้ได้จริง</div>
+          <div class="v ac">฿3,454.79</div>
+          <div class="d">รวมเฉพาะ item ที่ยังไม่เกินงบ</div>
+        </div>
+      </div>
+
+      <h2>Budget vs Actual</h2>
+      <div class="grid g2">
+        <div class="chartbox">
+          <h3>รายหมวด — งบ vs ใช้จริง</h3>
+          <p>hover เพื่อดูตัวเลข · แดง = เกินงบแล้ว</p>
+          <div class="ch"><canvas id="cBudget"></canvas></div>
+        </div>
+        <div class="chartbox">
+          <h3>สถานะรายหมวด</h3>
+          <p>เรียงตาม % การใช้</p>
+          <table>
+            <tr>
+              <th>หมวด</th>
+              <th class="r">งบ</th>
+              <th class="r">ใช้จริง</th>
+              <th class="r">%</th>
+              <th class="r">สถานะ</th>
+            </tr>
+            <tr>
+              <td>ให้เงินอ้น</td>
+              <td class="r">3,000</td>
+              <td class="r neg">5,000.00</td>
+              <td class="r">167%</td>
+              <td class="r"><span class="pill over">เกิน 2,000</span></td>
+            </tr>
+            <tr>
+              <td>ค่าเอารถเข้าศูนย์</td>
+              <td class="r">2,000</td>
+              <td class="r neg">3,500.00</td>
+              <td class="r">175%</td>
+              <td class="r"><span class="pill over">เกิน 1,500</span></td>
+            </tr>
+            <tr>
+              <td>ค่าจดทะเบียนรถ</td>
+              <td class="r">1,000</td>
+              <td class="r">1,000.00</td>
+              <td class="r">100%</td>
+              <td class="r"><span class="pill watch">ครบพอดี</span></td>
+            </tr>
+            <tr>
+              <td>น้ำมัน</td>
+              <td class="r">2,500</td>
+              <td class="r">2,250.00</td>
+              <td class="r">90%</td>
+              <td class="r"><span class="pill watch">เหลือ 250</span></td>
+            </tr>
+            <tr>
+              <td>Food</td>
+              <td class="r">6,000</td>
+              <td class="r">5,357.08</td>
+              <td class="r">89%</td>
+              <td class="r"><span class="pill watch">เหลือ 643</span></td>
+            </tr>
+            <tr>
+              <td>Subscription</td>
+              <td class="r">1,300</td>
+              <td class="r">954.13</td>
+              <td class="r">73%</td>
+              <td class="r"><span class="pill ok">เหลือ 346</span></td>
+            </tr>
+            <tr>
+              <td>โอนให้อายติดตัว</td>
+              <td class="r">3,000</td>
+              <td class="r">1,500.00</td>
+              <td class="r">50%</td>
+              <td class="r"><span class="pill ok">เหลือ 1,500</span></td>
+            </tr>
+            <tr>
+              <td>ทางด่วน (บอ)</td>
+              <td class="r">1,000</td>
+              <td class="r">284.00</td>
+              <td class="r">28%</td>
+              <td class="r"><span class="pill ok">เหลือ 716</span></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <h2>Daily Flow</h2>
+      <div class="chartbox">
+        <h3>รายจ่ายรายวัน — ในแผน vs นอกแผน</h3>
+        <p>
+          spike วันที่ 1 มิ.ย. = ค่าโรงแรม + ที่นั่งเครื่องบินญี่ปุ่น (9,490) ·
+          7 มิ.ย. = รถเข้าศูนย์ (3,500)
+        </p>
+        <div class="ch" style="height: 320px">
+          <canvas id="cDaily"></canvas>
+        </div>
+      </div>
+
+      <h2>Food Deep-Dive</h2>
+      <div class="grid g2">
+        <div class="chartbox">
+          <h3>Food สะสม vs เส้น pace ที่ควรเป็น</h3>
+          <p>งบ 6,000 ÷ 31 วัน = 193.5/วัน (เส้นประ)</p>
+          <div class="ch"><canvas id="cFood"></canvas></div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom: 14px">
+            <div class="k">Run rate ปัจจุบัน</div>
+            <div class="v neg">฿335/วัน</div>
+            <div class="d">
+              แต่งบที่เหลือ (643) ÷ 15 วัน อนุญาตแค่ <b class="wn">฿43/วัน</b>
+            </div>
+          </div>
+          <div class="card">
+            <div class="k">Projection ถ้าใช้ rate เดิมต่อ</div>
+            <div class="v neg">~฿10,380</div>
+            <div class="d">
+              เกินงบ Food ราว <b>+4,380</b> ภายในสิ้นรอบ — พ.ค. ใช้ 9,003 จากงบ
+              9,000 (rate ~290/วัน) การหั่นงบเหลือ 6,000
+              ยังไม่เปลี่ยนพฤติกรรมจริง
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>นอกแผน &amp; รายรับ</h2>
+      <div class="grid g2">
+        <div class="chartbox">
+          <h3>รายจ่ายนอกแผน 15,216.19</h3>
+          <p>82% คือทริปญี่ปุ่น</p>
+          <div class="ch" style="height: 260px">
+            <canvas id="cUnplanned"></canvas>
+          </div>
+        </div>
+        <div class="chartbox">
+          <h3>รายรับรอบนี้ — 18,016.76</h3>
+          <p>ยังไม่พบเงินเดือน (expected 26,897.36) ในรอบนี้</p>
+          <table>
+            <tr>
+              <th>วันที่</th>
+              <th>รายการ</th>
+              <th class="r">จำนวน</th>
+            </tr>
+            <tr>
+              <td>29 พ.ค.</td>
+              <td>แม่โอนเงินมา</td>
+              <td class="r pos">10,000.00</td>
+            </tr>
+            <tr>
+              <td>1 มิ.ย.</td>
+              <td>อายโอนค่าเที่ยว</td>
+              <td class="r pos">7,000.00</td>
+            </tr>
+            <tr>
+              <td>31 พ.ค.</td>
+              <td>อ้นโอนค่าน้ำมัน</td>
+              <td class="r pos">1,000.00</td>
+            </tr>
+            <tr>
+              <td>25 พ.ค.</td>
+              <td>ดอกเบี้ย + อื่นๆ</td>
+              <td class="r pos">16.76</td>
+            </tr>
+          </table>
+          <p style="margin-top: 14px">
+            ทริปญี่ปุ่นจ่ายแล้ว 12,477.19 − รับจากอาย 7,000 =
+            <b style="color: var(--warn)">สุทธิ 5,477.19</b> ที่ออกจากกระเป๋า
+            Aof (ยังไม่มีในแผน)
+          </p>
+        </div>
+      </div>
+
+      <h2>Insights</h2>
+      <div class="insight red">
+        <b>1 · งบรอบนี้หมดแล้วตั้งแต่วันที่ 17</b>
+        <span
+          >ใช้ไป 100.2% ของแผน เหลือ headroom จริงแค่ 3,454.79 สำหรับ 15 วัน
+          (เฉลี่ย 230/วัน ทุกหมวดรวมกัน) — ตัวขับหลักคือ overrun อ้น 2,000 +
+          รถเข้าศูนย์ 1,500 ตั้งแต่ต้นรอบ</span
+        >
+      </div>
+      <div class="insight red">
+        <b>2 · Food คือระเบิดเวลาลูกต่อไป</b>
+        <span
+          >rate 335/วัน vs อนุญาต 43/วัน ถ้าไม่เบรกจะเกิน ~4,380 — งบ 6,000
+          ต่ำกว่าพฤติกรรมจริงราว 40% (พ.ค. proof แล้วที่ 9,003) แนะนำตั้งงบ ก.ค.
+          ที่ ~9,000–9,500 ตาม variance history แทนการตั้งเป้าแบบหวังดี</span
+        >
+      </div>
+      <div class="insight yellow">
+        <b>3 · ทริปญี่ปุ่นคือ use case ตรงตัวของ expected_expenses</b>
+        <span
+          >12,477 จ่ายไปแล้วแบบไม่มีที่อยู่ในแผน และจะมีก้อนตามมาอีกหลายเดือน —
+          ถ้า run migration (forecast_type = Event-Based) รอบนี้ Free Cash
+          จะสะท้อนความจริงทันที แทนที่จะโผล่เป็น unplanned spike</span
+        >
+      </div>
+      <div class="insight yellow">
+        <b>4 · Free Cash 1,116 บาท = เกือบไม่มี buffer</b>
+        <span
+          >สูตร 13,818.80 − 19,800 + 7,097.36 — ถ้าหักเฉพาะ commitment
+          ที่เหลือจริง (3,454.79) เงินสดหลังปิด commitment คือ 10,364.01
+          ก่อนเงินเดือนรอบหน้า แต่ก้อนนี้ต้องเผื่อทริปญี่ปุ่นที่เหลือด้วย</span
+        >
+      </div>
+      <div class="insight">
+        <b>5 · Liquidity กระจุก 2 บัญชี</b>
+        <span
+          >BBL 7,635 + SCB Online 5,816 = 97.4% ของเงินทั้งหมด ส่วน SCB / Cash /
+          เป๋าตัง / True Wallet รวมกันเหลือ 368 — สอดคล้องกับแผน consolidate
+          บัญชีตาม Mental Accounting ที่คุยกันไว้</span
+        >
+      </div>
+
+      <div class="foot">
+        หมายเหตุ: ยอดใช้จริงรายหมวดอิงจาก plan_items (19,845.21)
+        ซึ่งสูงกว่ายอดที่ filter ตามช่วงวันที่ (19,460.21) อยู่ 385 บาท —
+        มีรายการผูกกับ plan item ของรอบนี้แต่ลงวันที่นอกหน้าต่าง 25/5–25/6 ·
+        กราฟรายวันและ Food สะสมใช้เฉพาะรายการในช่วงวันที่
+      </div>
+    </div>
+
+    <script>
+      const css = (v) =>
+        getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+      Chart.defaults.font.family = "'Space Mono', monospace";
+      Chart.defaults.font.size = 10.5;
+      Chart.defaults.color = css("--muted");
+      Chart.defaults.borderColor = css("--line");
+      const tip = {
+        backgroundColor: "#1a2030",
+        borderColor: css("--line"),
+        borderWidth: 1,
+        titleColor: css("--txt"),
+        bodyColor: css("--muted"),
+        padding: 10,
+        cornerRadius: 8,
+        displayColors: false,
+      };
+      const baht = (v) =>
+        "฿" + Number(v).toLocaleString("th-TH", { maximumFractionDigits: 2 });
+
+      // hero bars
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          document
+            .querySelectorAll(".bar i")
+            .forEach((b) => (b.style.width = b.dataset.w + "%"));
+        }),
+      );
+
+      // budget vs actual
+      new Chart(cBudget, {
+        type: "bar",
+        data: {
+          labels: [
+            "Food",
+            "อายติดตัว",
+            "ให้เงินอ้น",
+            "น้ำมัน",
+            "รถเข้าศูนย์",
+            "Subscription",
+            "ทางด่วน",
+            "จดทะเบียนรถ",
+          ],
+          datasets: [
+            {
+              label: "งบ",
+              data: [6000, 3000, 3000, 2500, 2000, 1300, 1000, 1000],
+              backgroundColor: "#2b3450",
+              borderRadius: 5,
+            },
+            {
+              label: "ใช้จริง",
+              data: [5357.08, 1500, 5000, 2250, 3500, 954.13, 284, 1000],
+              backgroundColor: [
+                "#fbbf24",
+                "#4ade80",
+                "#fb7185",
+                "#fbbf24",
+                "#fb7185",
+                "#4ade80",
+                "#4ade80",
+                "#fbbf24",
+              ].map((c) => c + "cc"),
+              borderRadius: 5,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { boxWidth: 10 } },
+            tooltip: {
+              ...tip,
+              callbacks: { label: (c) => c.dataset.label + ": " + baht(c.raw) },
+            },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { ticks: { callback: (v) => v / 1000 + "k" } },
+          },
+        },
+      });
+
+      // daily
+      const days = [
+        "25/5",
+        "26/5",
+        "27/5",
+        "28/5",
+        "29/5",
+        "30/5",
+        "31/5",
+        "1/6",
+        "2/6",
+        "3/6",
+        "4/6",
+        "5/6",
+        "6/6",
+        "7/6",
+        "8/6",
+      ];
+      new Chart(cDaily, {
+        type: "bar",
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: "ในแผน",
+              data: [
+                6311, 1036.13, 235, 252, 195, 896.18, 1106, 355, 100, 1797.6,
+                273.2, 2034.4, 1231.7, 3500, 137,
+              ],
+              backgroundColor: css("--accent") + "b3",
+              borderRadius: 4,
+              stack: "s",
+            },
+            {
+              label: "นอกแผน",
+              data: [
+                0, 0, 2986.88, 0, 0, 500, 899, 9490.31, 0, 1000, 0, 0, 240, 100,
+                0,
+              ],
+              backgroundColor: css("--info") + "b3",
+              borderRadius: 4,
+              stack: "s",
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { boxWidth: 10 } },
+            tooltip: {
+              ...tip,
+              callbacks: { label: (c) => c.dataset.label + ": " + baht(c.raw) },
+            },
+          },
+          scales: {
+            x: { grid: { display: false }, stacked: true },
+            y: { stacked: true, ticks: { callback: (v) => v / 1000 + "k" } },
+          },
+        },
+      });
+
+      // food cumulative
+      const foodDaily = [
+        92, 0, 136, 135, 195, 896.18, 606, 355, 100, 797.6, 206.2, 284.4,
+        1231.7, 0, 137,
+      ];
+      let s = 0;
+      const foodCum = foodDaily.map((v) => +(s += v).toFixed(2));
+      const pace = days.map((_, i) => +(193.55 * (i + 1)).toFixed(0));
+      new Chart(cFood, {
+        type: "line",
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: "Food สะสม",
+              data: foodCum,
+              borderColor: css("--warn"),
+              backgroundColor: css("--warn") + "22",
+              fill: true,
+              tension: 0.35,
+              pointRadius: 2.5,
+            },
+            {
+              label: "pace ตามงบ",
+              data: pace,
+              borderColor: css("--dim"),
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { boxWidth: 10 } },
+            tooltip: {
+              ...tip,
+              callbacks: { label: (c) => c.dataset.label + ": " + baht(c.raw) },
+            },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { ticks: { callback: (v) => v / 1000 + "k" } },
+          },
+        },
+      });
+
+      // unplanned doughnut
+      new Chart(cUnplanned, {
+        type: "doughnut",
+        data: {
+          labels: [
+            "ทริปญี่ปุ่น (โรงแรม+ที่พัก+ที่นั่ง)",
+            "โอนให้พ่อ (แอร์+กับข้าว)",
+            "พัดลมถือ",
+            "อื่นๆ (ล็อคเกอร์/จอดรถ/ตัดผม)",
+          ],
+          datasets: [
+            {
+              data: [12477.19, 1500, 899, 340],
+              backgroundColor: [
+                css("--info"),
+                css("--accent"),
+                css("--warn"),
+                "#3a4358",
+              ],
+              borderColor: css("--surface"),
+              borderWidth: 3,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          cutout: "62%",
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { boxWidth: 10, padding: 10 },
+            },
+            tooltip: {
+              ...tip,
+              callbacks: { label: (c) => c.label + ": " + baht(c.raw) },
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

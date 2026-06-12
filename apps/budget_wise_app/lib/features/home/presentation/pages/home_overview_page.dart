@@ -257,6 +257,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
             _buildHeader(state),
             _buildTotalBalanceCard(state),
             if (state.hasActivePlan) _buildBudgetSummaryCard(state),
+            if (state.hasActivePlan) _buildCashFlowSummary(state),
             if (!state.hasActivePlan) _buildNoPlanCard(),
             _buildAccountsSection(state),
             _buildRecentTransactionsSection(),
@@ -408,6 +409,124 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
                 style: context.styles.caption,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD - CASH FLOW SUMMARY (KPI grid)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// A 2×2 grid of key figures: total balance, free cash, overrun, and the
+  /// budget that is genuinely still usable. Mirrors the report's KPI cards.
+  Widget _buildCashFlowSummary(HomeState state) {
+    final freeCash = state.freeCash;
+    final overrun = state.totalOverrun;
+    final realRemaining = state.realRemainingBudget;
+
+    final fmt = CurrencyUtils.formatCurrency;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  label: 'Balance รวมทุกบัญชี',
+                  value: fmt(state.totalBalance),
+                  valueColor: context.colors.textPrimary,
+                  detail:
+                      '${state.accountCount} ${state.accountCount == 1 ? 'account' : 'accounts'}',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKpiCard(
+                  label: 'Free Cash',
+                  value: fmt(freeCash),
+                  valueColor: freeCash >= 0
+                      ? context.colors.income
+                      : context.colors.expense,
+                  detail: '${fmt(state.totalBalance)} − '
+                      '${fmt(state.totalPlannedExpenses)} + '
+                      '${fmt(state.actualIncome)}',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  label: 'Overrun แล้ว',
+                  value: overrun > 0 ? '-${fmt(overrun)}' : fmt(0),
+                  valueColor: overrun > 0
+                      ? context.colors.expense
+                      : context.colors.textPrimary,
+                  detail: overrun > 0
+                      ? 'ใช้เกินงบในบางหมวด'
+                      : 'ยังไม่มีหมวดไหนเกินงบ',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKpiCard(
+                  label: 'งบที่เหลือใช้ได้จริง',
+                  value: fmt(realRemaining),
+                  valueColor: context.colors.accent,
+                  detail: 'รวมเฉพาะหมวดที่ยังไม่เกินงบ',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKpiCard({
+    required String label,
+    required String value,
+    required Color valueColor,
+    required String detail,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: context.styles.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: context.styles.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+              color: valueColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            detail,
+            style: context.styles.caption,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

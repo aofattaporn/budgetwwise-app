@@ -520,8 +520,8 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
                       ? context.colors.income
                       : context.colors.expense,
                   detail: '${fmt(state.totalBalance)} − '
-                      '${fmt(state.totalPlannedExpenses)} + '
-                      '${fmt(state.actualIncome)}',
+                      '${fmt(state.realRemainingBudget)} − '
+                      '${fmt(state.remainingExpectedExpenses)}',
                 ),
               ),
             ],

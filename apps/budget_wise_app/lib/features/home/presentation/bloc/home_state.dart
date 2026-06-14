@@ -54,8 +54,15 @@ class HomeState extends Equatable {
       );
 
   /// Cash you can freely use this period.
-  /// Formula: total balance − total planned budget + income received so far.
-  double get freeCash => totalBalance - totalPlannedExpenses + actualIncome;
+  /// Formula: balance − remaining budget − remaining expected expenses.
+  /// "Remaining budget" is the genuinely-usable leftover ([realRemainingBudget],
+  /// over-budget categories contribute 0). The expected-expenses term is
+  /// reserved for future projection and is currently 0.
+  double get freeCash => totalBalance - realRemainingBudget - remainingExpectedExpenses;
+
+  /// Expenses still expected before the period ends, beyond what is already
+  /// captured by [realRemainingBudget]. Reserved for future projection; 0 today.
+  double get remainingExpectedExpenses => 0;
 
   /// Total expense logged today (transfers and income excluded).
   double get todayExpenseTotal => todayTransactions

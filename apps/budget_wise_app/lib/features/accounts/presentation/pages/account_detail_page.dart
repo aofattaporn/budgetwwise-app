@@ -261,7 +261,12 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         children: [
           Row(
             children: [
-              context.styles.iconBox(icon: _getIconForType(_account.type), size: AppDimens.iconMd),
+              context.styles.iconBox(
+                icon: _getIconForType(_account.type),
+                size: AppDimens.iconMd,
+                bgColor: _getColorForType(_account.type).withValues(alpha: 0.12),
+                iconColor: _getColorForType(_account.type),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -433,6 +438,21 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         return 'E-Wallet';
       default:
         return type;
+    }
+  }
+
+  /// Distinct, subtle accent hue per account type (matches the accounts list).
+  Color _getColorForType(String type) {
+    switch (type.toLowerCase()) {
+      case 'cash':
+        return const Color(0xFFF59E0B); // amber
+      case 'ewallet':
+      case 'e-wallet':
+        return const Color(0xFF14B8A6); // teal
+      case 'bank':
+      case 'debit':
+      default:
+        return const Color(0xFF3B82F6); // blue
     }
   }
 }

@@ -56,7 +56,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   /// Handle account item tap - navigate to detail page
   Future<void> _onAccountTap(Account account) async {
-    final result = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
@@ -173,19 +173,6 @@ class _AccountScreenState extends State<AccountScreen> {
   // BUILD - STATES
   // ═══════════════════════════════════════════════════════════════════════════
 
-  PreferredSizeWidget _buildAppBar() {
-    return context.styles.appBar(
-      title: 'Accounts',
-      showBack: false,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: _navigateToCreateAccount,
-        ),
-      ],
-    );
-  }
-
   void _handleStateChanges(BuildContext context, AccountState state) {
     if (state is AccountError) {
       context.showSnackBar(state.message, isError: true);
@@ -256,20 +243,73 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildTotalBalanceSummary(AccountLoaded state) {
+    // Branded blue "card" hero. Fixed gradient (not theme accent) so white text
+    // keeps strong contrast in both light and dark mode.
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: context.styles.card,
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Total Balance', style: context.styles.label),
-          const SizedBox(height: 8),
-          Text(CurrencyUtils.formatCurrency(state.totalBalance), style: context.styles.displayLarge),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'Total Balance',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.account_balance_wallet_rounded,
+                color: Colors.white.withValues(alpha: 0.9),
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
-            'Across ${state.accountCount} ${state.accountCount == 1 ? 'account' : 'accounts'}',
-            style: context.styles.caption,
+            CurrencyUtils.formatCurrency(state.totalBalance),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+            ),
+            child: Text(
+              '${state.accountCount} ${state.accountCount == 1 ? 'account' : 'accounts'}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -320,25 +360,33 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Widget _buildAddAccountButton() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       child: InkWell(
         onTap: _navigateToCreateAccount,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            color: context.colors.cardBg,
-            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-            border: Border.all(color: context.colors.border, style: BorderStyle.solid, width: 1),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        child: CustomPaint(
+          painter: DashedBorderPainter(
+            color: context.colors.accent.withValues(alpha: 0.45),
+            strokeWidth: 1.5,
+            borderRadius: AppDimens.radiusLg,
+            dashWidth: 6,
+            dashSpace: 4,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add_rounded, size: 20, color: context.colors.textTertiary),
-              const SizedBox(height: 4),
-              Text('Add Account', style: context.styles.bodySmall),
-            ],
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_rounded, size: 20, color: context.colors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Add Account',
+                  style: context.styles.bodyLarge
+                      .copyWith(color: context.colors.accent),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -362,9 +410,10 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final typeColor = _getColorForType(account.type);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+      borderRadius: BorderRadius.circular(AppDimens.radiusLg),
       child: Container(
         padding: const EdgeInsets.all(AppDimens.cardPadding),
         decoration: context.styles.card,
@@ -373,6 +422,8 @@ class _AccountCard extends StatelessWidget {
             context.styles.iconBox(
               icon: _getIconForType(account.type),
               size: AppDimens.iconMd,
+              bgColor: typeColor.withValues(alpha: 0.12),
+              iconColor: typeColor,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -416,6 +467,22 @@ class _AccountCard extends StatelessWidget {
         return Icons.wallet;
       default:
         return Icons.account_balance_wallet;
+    }
+  }
+
+  /// Distinct, subtle accent hue per account type. Deliberately avoids the
+  /// income-green so it doesn't clash with balance/transaction semantics.
+  Color _getColorForType(String type) {
+    switch (type.toLowerCase()) {
+      case 'cash':
+        return const Color(0xFFF59E0B); // amber
+      case 'ewallet':
+      case 'e-wallet':
+        return const Color(0xFF14B8A6); // teal
+      case 'bank':
+      case 'debit':
+      default:
+        return const Color(0xFF3B82F6); // blue
     }
   }
 

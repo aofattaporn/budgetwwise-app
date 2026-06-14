@@ -24,7 +24,7 @@ class _HeatmapPageState extends State<HeatmapPage> {
 
   // ── Category color palette (mirrors InsightPage pie chart) ────────────────
   static const List<Color> _palette = [
-    Color(0xFF4D648D),
+    Color(0xFF3B82F6),
     Color(0xFFDC2626),
     Color(0xFF059669),
     Color(0xFFFF9800),
@@ -40,9 +40,9 @@ class _HeatmapPageState extends State<HeatmapPage> {
   Color _colorFor(int index) => _palette[index % _palette.length];
 
   Color get _activeColor {
-    if (_selectedCategory == null) return const Color(0xFF4D648D);
+    if (_selectedCategory == null) return const Color(0xFF3B82F6);
     final idx = _categories.indexWhere((c) => c.name == _selectedCategory);
-    return idx >= 0 ? _colorFor(idx) : const Color(0xFF4D648D);
+    return idx >= 0 ? _colorFor(idx) : const Color(0xFF3B82F6);
   }
 
   // ── Filtered entries ──────────────────────────────────────────────────────

@@ -90,8 +90,8 @@ class _PlanListView extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: context.colors.surfaceLight, shape: BoxShape.circle),
-            child: Icon(Icons.calendar_month_outlined, size: 48, color: context.colors.textTertiary),
+            decoration: BoxDecoration(color: context.colors.accentLight, shape: BoxShape.circle),
+            child: Icon(Icons.calendar_month_rounded, size: 44, color: context.colors.accent),
           ),
           const SizedBox(height: 24),
           Text('No Plans Yet', style: context.styles.titleLarge),
@@ -231,7 +231,7 @@ class _PlanCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
         child: Container(
           padding: const EdgeInsets.all(AppDimens.cardPadding),
           decoration: context.styles.card,

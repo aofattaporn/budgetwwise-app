@@ -78,8 +78,6 @@ class _AccountCreateScreenState extends State<AccountCreateScreen> {
           updatedAt: now,
         );
 
-        print('📝 Updating account: ${updatedAccount.name} (${updatedAccount.type}) - Balance: ${updatedAccount.balance}');
-
         if (mounted) {
           context.read<AccountBloc>().add(UpdateAccountRequested(updatedAccount));
         }
@@ -96,8 +94,6 @@ class _AccountCreateScreenState extends State<AccountCreateScreen> {
           updatedAt: now,
         );
 
-        print('📝 Creating account: ${account.name} (${account.type}) - Balance: ${account.balance} ${account.currency}');
-
         if (mounted) {
           context.read<AccountBloc>().add(CreateAccountRequested(account));
         }
@@ -108,7 +104,6 @@ class _AccountCreateScreenState extends State<AccountCreateScreen> {
       
       // Return success
       if (mounted) {
-        print('✅ Account save completed, navigating back');
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -213,30 +208,40 @@ class _AccountCreateScreenState extends State<AccountCreateScreen> {
         
         return InkWell(
           onTap: isEnabled ? () => setState(() => _selectedType = type['value']) : null,
-          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           child: Opacity(
             opacity: isEnabled ? 1.0 : 0.5,
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
-                color: isSelected ? context.colors.accentLight : context.colors.cardBg,
-                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                color: isSelected ? context.colors.accent : context.colors.cardBg,
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                 border: Border.all(
                   color: isSelected ? context.colors.accent : context.colors.border,
                   width: isSelected ? 1.5 : 0.5,
                 ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: context.colors.accent.withValues(alpha: 0.30),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(type['icon'], size: 22, color: isSelected ? context.colors.accent : context.colors.textTertiary),
+                  Icon(type['icon'], size: 22, color: isSelected ? Colors.white : context.colors.textTertiary),
                   if (type['label'].isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       type['label'],
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-                        color: isSelected ? context.colors.accent : context.colors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected ? Colors.white : context.colors.textSecondary,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,

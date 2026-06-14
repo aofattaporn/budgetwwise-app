@@ -143,28 +143,66 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
   Widget _buildAvailableToSpendCard() {
     final progress = (_percentageLeft / 100).clamp(0.0, 1.0);
 
+    // Branded blue "card" hero. Fixed gradient (not theme accent) so white text
+    // keeps strong contrast in both light and dark mode. Mirrors the Accounts
+    // total-balance hero for app-wide consistency.
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: context.styles.card,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Available to Spend', style: context.styles.label),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'Available to Spend',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.savings_outlined,
+                color: Colors.white.withValues(alpha: 0.9),
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             CurrencyUtils.formatCurrency(_availableToSpend.clamp(0, double.infinity)),
-            style: context.styles.displayLarge,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 4,
-              backgroundColor: context.colors.surfaceLight,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                progress < 0.15 ? context.colors.expense : context.colors.accent,
-              ),
+              minHeight: 6,
+              backgroundColor: Colors.white.withValues(alpha: 0.24),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
           const SizedBox(height: 12),
@@ -173,11 +211,18 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
             children: [
               Text(
                 '${CurrencyUtils.formatCurrency(widget.totalSpent)} spent',
-                style: context.styles.caption,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.80),
+                  fontSize: 12,
+                ),
               ),
               Text(
                 '${_percentageLeft.toStringAsFixed(0)}% left',
-                style: context.styles.caption,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -222,27 +267,6 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
   // ═══════════════════════════════════════════════════════════════════════════
   // BUILD - REUSABLE COMPONENTS
   // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildDetailRow({
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: context.styles.bodySmall),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: valueColor ?? context.colors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildActionButton({
     required IconData icon,

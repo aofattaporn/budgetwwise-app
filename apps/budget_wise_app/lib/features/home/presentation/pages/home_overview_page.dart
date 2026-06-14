@@ -415,64 +415,124 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
             ? 'Last day'
             : '$daysLeft days left';
 
+    // Branded blue hero for the active plan. Fixed gradient (not theme accent)
+    // so white text keeps strong contrast in both light and dark, consistent
+    // with the Accounts and Plans heroes.
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: context.styles.card,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Active Plan', style: context.styles.label),
-              Text(daysLeftText, style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: daysLeft <= 3 ? context.colors.expense : context.colors.accent,
-              )),
+              Text(
+                'Active Plan',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: daysLeft <= 3
+                      ? const Color(0xFFEF4444)
+                      : Colors.white.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+                ),
+                child: Text(
+                  daysLeftText,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(plan.name, style: context.styles.titleLarge),
+          const SizedBox(height: 12),
+          Text(
+            plan.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(plan.formattedPeriod, style: context.styles.caption),
-          const SizedBox(height: 16),
-          Text('Remaining Budget', style: context.styles.caption),
+          Text(
+            plan.formattedPeriod,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Remaining Budget',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.80),
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             CurrencyUtils.formatCurrency(remaining),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
-              color: remaining >= 0 ? context.colors.textPrimary : context.colors.expense,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 4,
-              backgroundColor: context.colors.surfaceLight,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                progress < 0.15 ? context.colors.expense : context.colors.accent,
-              ),
+              minHeight: 6,
+              backgroundColor: Colors.white.withValues(alpha: 0.24),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Spent: ${CurrencyUtils.formatCurrency(spent)}',
-                style: context.styles.caption,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.80),
+                  fontSize: 12,
+                ),
               ),
               Text(
                 'Budget: ${CurrencyUtils.formatCurrency(budget)}',
-                style: context.styles.caption,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.80),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -611,8 +671,16 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
       decoration: context.styles.card,
       child: Column(
         children: [
-          Icon(Icons.calendar_today_outlined, size: 32, color: context.colors.textTertiary),
-          const SizedBox(height: 12),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: context.colors.accentLight,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.calendar_today_rounded, size: 28, color: context.colors.accent),
+          ),
+          const SizedBox(height: 16),
           Text('No Active Plan', style: context.styles.bodyLarge),
           const SizedBox(height: 4),
           Text(

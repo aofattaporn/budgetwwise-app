@@ -85,7 +85,7 @@ class _AddPlanItemDialogState extends State<AddPlanItemDialog> {
         ElevatedButton(
           onPressed: _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4D648D),
+            backgroundColor: const Color(0xFF3B82F6),
             foregroundColor: Colors.white,
           ),
           child: const Text('Add'),

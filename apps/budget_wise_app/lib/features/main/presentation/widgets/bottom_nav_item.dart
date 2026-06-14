@@ -26,7 +26,7 @@ class BottomNavItem extends StatelessWidget {
     required this.data,
     required this.isSelected,
     required this.onTap,
-    this.activeColor = const Color(0xFF4D648D),
+    this.activeColor = const Color(0xFF3B82F6),
     this.inactiveColor = const Color(0xFFA3A3A3),
   });
 

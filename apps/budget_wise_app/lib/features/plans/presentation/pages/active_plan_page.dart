@@ -150,7 +150,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> _navigateToItemDetail(PlanItem item) async {
-    final result = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
@@ -348,7 +348,15 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.category_outlined, size: 36, color: context.colors.textTertiary),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.colors.accentLight,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.category_rounded, size: 28, color: context.colors.accent),
+            ),
             const SizedBox(height: 16),
             Text('No budget items yet', style: context.styles.bodyLarge),
             const SizedBox(height: 8),
@@ -360,8 +368,6 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
   }
 
   Widget _buildPlanItemCard(ActivePlanState state, PlanItem item) {
-    final plan = state.plan!;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PlanItemCard(

@@ -22,13 +22,13 @@ class NoPlanWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: context.colors.surfaceLight,
+                color: context.colors.accentLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.checklist, size: 28, color: context.colors.textTertiary),
+              child: Icon(Icons.checklist_rounded, size: 32, color: context.colors.accent),
             ),
             const SizedBox(height: 24),
             Text('No Active Plan', style: context.styles.titleLarge),

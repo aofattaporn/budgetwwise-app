@@ -6,7 +6,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF4D648D),
+        seedColor: const Color(0xFF3B82F6),
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: const Color(0xFFFAFAFA),
@@ -20,12 +20,12 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF4D648D),
+        seedColor: const Color(0xFF3B82F6),
         brightness: Brightness.dark,
       ),
-      scaffoldBackgroundColor: const Color(0xFF121212),
-      cardColor: const Color(0xFF1E1E1E),
-      dividerColor: const Color(0xFF2D2D2D),
+      scaffoldBackgroundColor: const Color(0xFF121214),
+      cardColor: const Color(0xFF1C1C1F),
+      dividerColor: const Color(0xFF242428),
     );
   }
 }

@@ -104,7 +104,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF4D648D),
+              primary: Color(0xFF3B82F6),
             ),
           ),
           child: child!,
@@ -133,7 +133,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF4D648D),
+              primary: Color(0xFF3B82F6),
             ),
           ),
           child: child!,

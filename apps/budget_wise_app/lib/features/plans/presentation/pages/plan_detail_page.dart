@@ -285,7 +285,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F8),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4D648D),
+        backgroundColor: const Color(0xFF3B82F6),
         foregroundColor: Colors.white,
         title: Text(
           _currentPlan.name,
@@ -302,7 +302,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF4D648D),
+                color: Color(0xFF3B82F6),
               ),
             )
           : RefreshIndicator(
@@ -378,7 +378,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               const Icon(
                 Icons.calendar_today,
                 size: 20,
-                color: Color(0xFF4D648D),
+                color: Color(0xFF3B82F6),
               ),
               const SizedBox(width: 8),
               Text(
@@ -400,7 +400,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               label: 'Expected Income',
               value: CurrencyUtils.formatCurrency(
                   _currentPlan.expectedIncome ?? 0),
-              valueColor: const Color(0xFF4D648D),
+              valueColor: const Color(0xFF3B82F6),
             ),
             const SizedBox(height: 12),
           ],
@@ -461,14 +461,14 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                   Icon(
                     Icons.add,
                     size: 18,
-                    color: Color(0xFF4D648D),
+                    color: Color(0xFF3B82F6),
                   ),
                   SizedBox(width: 4),
                   Text(
                     'Add Item',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF4D648D),
+                      color: Color(0xFF3B82F6),
                     ),
                   ),
                 ],
@@ -485,7 +485,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
             child: Padding(
               padding: EdgeInsets.all(32),
               child: CircularProgressIndicator(
-                color: Color(0xFF4D648D),
+                color: Color(0xFF3B82F6),
               ),
             ),
           )
@@ -528,7 +528,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Item'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4D648D),
+                      backgroundColor: const Color(0xFF3B82F6),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

@@ -37,6 +37,10 @@ class InsightBloc extends Bloc<InsightEvent, InsightState> {
     RefreshInsightData event,
     Emitter<InsightState> emit,
   ) async {
+    // Drop cached plans/items so a refresh re-reads from the DB. Transactions
+    // are never cached, but plan data has a 5-min TTL and would otherwise be
+    // served stale on pull-to-refresh / tab switch.
+    _planRepository.invalidateCache();
     await _loadPlansAndData(emit);
   }
 

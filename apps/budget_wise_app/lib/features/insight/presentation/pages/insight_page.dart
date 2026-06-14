@@ -237,7 +237,21 @@ class _InsightPageState extends State<InsightPage> {
 
   Widget _buildContent(InsightState state) {
     if (state.transactions.isEmpty) {
-      return _buildEmptyState();
+      return RefreshIndicator(
+        color: context.colors.primary,
+        onRefresh: () async {
+          context.read<InsightBloc>().add(const RefreshInsightData());
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: _buildEmptyState(),
+            ),
+          ),
+        ),
+      );
     }
 
     return RefreshIndicator(

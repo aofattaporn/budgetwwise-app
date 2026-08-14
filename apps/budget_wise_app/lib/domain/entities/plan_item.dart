@@ -78,10 +78,14 @@ class PlanItem extends Equatable {
   bool get isNearLimit => !isOverBudget && (actualAmount / expectedAmount) >= 0.85;
 
   /// Get progress percentage (0.0 to 1.0, capped at 1.0)
+  ///
+  /// [actualAmount] can go negative when reimbursements for an item exceed its
+  /// spend, so the ratio is floored at 0 as well — a progress bar cannot draw
+  /// a negative fill.
   double get progressPercentage {
     if (expectedAmount <= 0) return 0;
     final progress = actualAmount / expectedAmount;
-    return progress > 1 ? 1 : progress;
+    return progress.clamp(0.0, 1.0);
   }
 
   /// Get status of the plan item

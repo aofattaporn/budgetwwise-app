@@ -63,4 +63,27 @@ void main() {
       expect(item.status, PlanItemStatus.overBudget);
     });
   });
+
+  group('PlanItem with reimbursements exceeding spend (negative actual)', () {
+    // Income tagged to a plan item offsets its spend, so actual can go below 0
+    // — e.g. pay Netflix 536 then get 620 back. Nothing may render negatively.
+    test('progressPercentage is floored at 0, not negative', () {
+      expect(_item(expected: 100, actual: -20).progressPercentage, 0);
+    });
+
+    test('remainingAmount exceeds the budget rather than capping at it', () {
+      expect(_item(expected: 100, actual: -20).remainingAmount, 120);
+    });
+
+    test('is neither over budget nor near limit', () {
+      final item = _item(expected: 100, actual: -20);
+      expect(item.isOverBudget, isFalse);
+      expect(item.isNearLimit, isFalse);
+      expect(item.overAmount, 0);
+    });
+
+    test('fully reimbursed item reads as noActivity', () {
+      expect(_item(expected: 100, actual: 0).status, PlanItemStatus.noActivity);
+    });
+  });
 }

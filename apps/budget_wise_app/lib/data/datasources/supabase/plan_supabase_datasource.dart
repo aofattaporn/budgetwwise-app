@@ -211,18 +211,23 @@ class PlanSupabaseDataSource implements PlanDataSource {
 
       if (itemIds.isEmpty) return {};
 
-      // Get expense transactions linked to these plan items
+      // Expenses and income linked to these plan items. Income tagged to a
+      // plan item is a reimbursement — money fronted for someone else and paid
+      // back — so it offsets that item's spend instead of counting as income
+      // (e.g. pay Netflix 536, sibling transfers 420 back => actual 116).
+      // Transfers move money between own accounts and never count.
       final txnResponse = await _client
           .from('transactions')
-          .select('plan_item_id, amount')
-          .eq('type', 'expense')
+          .select('plan_item_id, amount, type')
+          .inFilter('type', ['expense', 'income'])
           .inFilter('plan_item_id', itemIds);
 
       final result = <String, double>{};
       for (final row in txnResponse as List) {
         final itemId = row['plan_item_id'] as String;
         final amount = double.parse(row['amount'].toString());
-        result[itemId] = (result[itemId] ?? 0) + amount;
+        final signed = row['type'] == 'income' ? -amount : amount;
+        result[itemId] = (result[itemId] ?? 0) + signed;
       }
       return result;
     } catch (e) {
@@ -237,11 +242,14 @@ class PlanSupabaseDataSource implements PlanDataSource {
       final plan = await getPlanById(planId);
       if (plan == null) return 0;
 
-      // Sum income transactions within the plan period
+      // Sum income transactions within the plan period. Income tagged to a
+      // plan item is a reimbursement, already netted off that item's actual by
+      // [getPlanItemActuals] — counting it here too would double-count it.
       final response = await _client
           .from('transactions')
           .select('amount')
           .eq('type', 'income')
+          .isFilter('plan_item_id', null)
           .gte('occurred_at', plan.startDate.toUtc().toIso8601String())
           .lte('occurred_at', plan.endDate.toUtc().toIso8601String());
 

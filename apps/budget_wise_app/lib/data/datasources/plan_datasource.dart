@@ -48,6 +48,7 @@ abstract class PlanDataSource {
     required double expectedAmount,
     int? iconIndex,
     String recurrenceType = 'daily',
+    bool isTrackingOnly = false,
   });
 
   /// Update a plan item

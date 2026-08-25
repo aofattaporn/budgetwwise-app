@@ -14,6 +14,7 @@ void main() {
         'actual_amount': 100.5,
         'created_at': '2026-05-01T00:00:00.000Z',
         'updated_at': '2026-05-02T00:00:00.000Z',
+        'is_tracking_only': true,
       });
 
       expect(model.id, 'i1');
@@ -22,6 +23,7 @@ void main() {
       expect(model.iconIndex, 3);
       expect(model.actualAmount, 100.5);
       expect(model.createdAt, DateTime.parse('2026-05-01T00:00:00.000Z'));
+      expect(model.isTrackingOnly, isTrue);
     });
 
     test('defaults actualAmount to 0 and tolerates null optionals', () {
@@ -41,6 +43,7 @@ void main() {
       expect(model.description, isNull);
       expect(model.iconIndex, isNull);
       expect(model.createdAt, isNull);
+      expect(model.isTrackingOnly, isFalse);
     });
   });
 
@@ -51,6 +54,7 @@ void main() {
       'name': 'Groceries',
       'expected_amount': 250,
       'actual_amount': 40,
+      'is_tracking_only': true,
     });
 
     final roundTripped = PlanItemModel.fromEntity(original.toEntity());
@@ -58,5 +62,6 @@ void main() {
     expect(roundTripped.id, original.id);
     expect(roundTripped.expectedAmount, original.expectedAmount);
     expect(roundTripped.actualAmount, original.actualAmount);
+    expect(roundTripped.isTrackingOnly, isTrue);
   });
 }

@@ -150,6 +150,7 @@ class PlanRepositoryImpl implements PlanRepository {
     required double expectedAmount,
     int? iconIndex,
     RecurrenceType recurrenceType = RecurrenceType.daily,
+    bool isTrackingOnly = false,
   }) async {
     final model = await _dataSource.addPlanItem(
       planId: planId,
@@ -158,6 +159,7 @@ class PlanRepositoryImpl implements PlanRepository {
       expectedAmount: expectedAmount,
       iconIndex: iconIndex,
       recurrenceType: recurrenceType.value,
+      isTrackingOnly: isTrackingOnly,
     );
     _cachedPlanItems.remove(planId);
     return model.toEntity();

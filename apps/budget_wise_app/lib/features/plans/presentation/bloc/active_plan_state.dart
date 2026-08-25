@@ -27,9 +27,11 @@ class ActivePlanState extends Equatable {
   /// Check if there is an active plan
   bool get hasActivePlan => plan != null;
 
-  /// Get total planned expenses
-  double get totalPlannedExpenses =>
-      planItems.fold(0, (sum, item) => sum + item.expectedAmount);
+  /// Get total planned expenses (tracking-only items, e.g. money lent out,
+  /// don't compete for budget headroom)
+  double get totalPlannedExpenses => planItems
+      .where((item) => !item.isTrackingOnly)
+      .fold(0, (sum, item) => sum + item.expectedAmount);
 
   /// Get total actual expenses
   double get totalActualExpenses =>

@@ -82,6 +82,7 @@ class _PlanItemDetailPageState extends State<PlanItemDetailPage> {
               description: result['description'] as String?,
               expectedAmount: result['amount'] as double,
               iconIndex: result['iconIndex'] as int?,
+              isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
             ),
           );
       // Refresh the plan to get updated item
@@ -93,6 +94,7 @@ class _PlanItemDetailPageState extends State<PlanItemDetailPage> {
           description: result['description'] as String?,
           expectedAmount: result['amount'] as double,
           iconIndex: result['iconIndex'] as int?,
+          isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
         );
       });
     }

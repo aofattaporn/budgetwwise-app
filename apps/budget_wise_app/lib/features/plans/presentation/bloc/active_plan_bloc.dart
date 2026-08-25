@@ -138,6 +138,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
         expectedAmount: event.expectedAmount,
         iconIndex: event.iconIndex,
         recurrenceType: event.recurrenceType,
+        isTrackingOnly: event.isTrackingOnly,
       );
 
       emit(state.copyWith(
@@ -198,6 +199,7 @@ class ActivePlanBloc extends Bloc<ActivePlanEvent, ActivePlanState> {
         expectedAmount: event.expectedAmount,
         iconIndex: event.iconIndex,
         recurrenceType: event.recurrenceType,
+        isTrackingOnly: event.isTrackingOnly,
       );
 
       final result = await _planRepository.updatePlanItem(updatedItem);

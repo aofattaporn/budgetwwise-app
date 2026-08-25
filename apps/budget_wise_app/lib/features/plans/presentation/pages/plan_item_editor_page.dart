@@ -85,6 +85,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
   bool _isExpenseType = true;
   int _selectedIconIndex = 0;
   RecurrenceType _selectedRecurrenceType = RecurrenceType.daily;
+  bool _isTrackingOnly = false;
 
   // Reference shared icon list
   static List<PlanItemIcon> get _availableIcons => PlanItemIcon.all;
@@ -103,6 +104,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       _descriptionController.text = item.description ?? '';
       _selectedIconIndex = item.iconIndex ?? _findIconIndexByName(item.name);
       _selectedRecurrenceType = item.recurrenceType;
+      _isTrackingOnly = item.isTrackingOnly;
     }
   }
 
@@ -134,29 +136,33 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       final newTotalPlanned =
           widget.currentTotalPlanned - existingItemAmount + amount;
 
-      // Validate: must have expected income set before adding items
-      if (expectedIncome <= 0) {
-        _showValidationError(
-          'No Budget Set',
-          'Please set an expected income for this plan before adding items.\n\n'
-              'Go back and edit the plan\'s expected income first.',
-        );
-        return;
-      }
+      // Tracking-only items (e.g. money lent out) don't compete for budget
+      // headroom, so they're exempt from both caps below.
+      if (!_isTrackingOnly) {
+        // Validate: must have expected income set before adding items
+        if (expectedIncome <= 0) {
+          _showValidationError(
+            'No Budget Set',
+            'Please set an expected income for this plan before adding items.\n\n'
+                'Go back and edit the plan\'s expected income first.',
+          );
+          return;
+        }
 
-      // Validate: new total should not exceed expected income
-      if (newTotalPlanned > expectedIncome) {
-        final availableBudget =
-            expectedIncome - widget.currentTotalPlanned + existingItemAmount;
-        _showValidationError(
-          'Budget Exceeded',
-          'Adding this item (${CurrencyUtils.formatCurrency(amount)}) would exceed your plan budget.\n\n'
-              'Available budget: ${CurrencyUtils.formatCurrency(availableBudget.clamp(0, double.infinity))}\n'
-              'Expected income: ${CurrencyUtils.formatCurrency(expectedIncome)}\n'
-              'Current planned: ${CurrencyUtils.formatCurrency(widget.currentTotalPlanned - existingItemAmount)}\n\n'
-              'Please reduce the amount or increase your plan\'s expected income.',
-        );
-        return;
+        // Validate: new total should not exceed expected income
+        if (newTotalPlanned > expectedIncome) {
+          final availableBudget =
+              expectedIncome - widget.currentTotalPlanned + existingItemAmount;
+          _showValidationError(
+            'Budget Exceeded',
+            'Adding this item (${CurrencyUtils.formatCurrency(amount)}) would exceed your plan budget.\n\n'
+                'Available budget: ${CurrencyUtils.formatCurrency(availableBudget.clamp(0, double.infinity))}\n'
+                'Expected income: ${CurrencyUtils.formatCurrency(expectedIncome)}\n'
+                'Current planned: ${CurrencyUtils.formatCurrency(widget.currentTotalPlanned - existingItemAmount)}\n\n'
+                'Please reduce the amount or increase your plan\'s expected income.',
+          );
+          return;
+        }
       }
 
       final result = {
@@ -166,6 +172,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
         'iconIndex': _selectedIconIndex,
         'description': _descriptionController.text.trim(),
         'recurrenceType': _selectedRecurrenceType,
+        'isTrackingOnly': _isTrackingOnly,
       };
 
       if (widget.existingItem != null) {
@@ -262,6 +269,11 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
 
                         // Description
                         _buildDescriptionField(),
+
+                        const SizedBox(height: 24),
+
+                        // Tracking-only toggle (e.g. lending / IOU)
+                        _buildTrackingOnlyToggle(),
 
                         const SizedBox(height: 24),
 
@@ -642,6 +654,36 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
     );
   }
 
+  Widget _buildTrackingOnlyToggle() {
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.card,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tracking only', style: context.styles.bodyLarge),
+                const SizedBox(height: 4),
+                Text(
+                  'e.g. money lent out — won\'t count toward your budget or show as over budget',
+                  style: context.styles.caption,
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _isTrackingOnly,
+            onChanged: (value) => setState(() => _isTrackingOnly = value),
+            activeTrackColor: context.colors.accent,
+            activeThumbColor: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPreviewSection() {
     final amount = _previewAmount;
     final expectedIncome = widget.plan.expectedIncome ?? 0;
@@ -650,8 +692,10 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
         widget.currentTotalPlanned - existingItemAmount + amount;
     final availableBudget =
         expectedIncome - widget.currentTotalPlanned + existingItemAmount;
-    final hasBudgetIssue =
-        expectedIncome > 0 && amount > 0 && newTotalPlanned > expectedIncome;
+    final hasBudgetIssue = !_isTrackingOnly &&
+        expectedIncome > 0 &&
+        amount > 0 &&
+        newTotalPlanned > expectedIncome;
 
     return Container(
       padding: const EdgeInsets.all(AppDimens.cardPadding),

@@ -161,6 +161,7 @@ class PlanSupabaseDataSource implements PlanDataSource {
     required double expectedAmount,
     int? iconIndex,
     String recurrenceType = 'daily',
+    bool isTrackingOnly = false,
   }) async {
     final data = {
       'plan_id': planId,
@@ -169,6 +170,7 @@ class PlanSupabaseDataSource implements PlanDataSource {
       'expected_amount': expectedAmount,
       'icon_index': iconIndex,
       'recurrence_type': recurrenceType,
+      'is_tracking_only': isTrackingOnly,
     };
 
     final response = await _client

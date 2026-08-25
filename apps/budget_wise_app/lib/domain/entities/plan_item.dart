@@ -52,6 +52,10 @@ class PlanItem extends Equatable {
   /// Actual amount spent/received (calculated from transactions)
   final double actualAmount;
 
+  /// Tracks money movements (e.g. lending an IOU) that should never compete
+  /// for budget headroom or read as over budget — see [isOverBudget].
+  final bool isTrackingOnly;
+
   const PlanItem({
     required this.id,
     required this.planId,
@@ -61,6 +65,7 @@ class PlanItem extends Equatable {
     this.iconIndex,
     this.recurrenceType = RecurrenceType.daily,
     this.actualAmount = 0,
+    this.isTrackingOnly = false,
     this.createdAt,
     this.updatedAt,
   });
@@ -72,10 +77,10 @@ class PlanItem extends Equatable {
   double get overAmount => actualAmount > expectedAmount ? actualAmount - expectedAmount : 0;
 
   /// Check if over budget
-  bool get isOverBudget => actualAmount > expectedAmount;
+  bool get isOverBudget => !isTrackingOnly && actualAmount > expectedAmount;
 
   /// Check if near limit (>= 85% used)
-  bool get isNearLimit => !isOverBudget && (actualAmount / expectedAmount) >= 0.85;
+  bool get isNearLimit => !isTrackingOnly && !isOverBudget && (actualAmount / expectedAmount) >= 0.85;
 
   /// Get progress percentage (0.0 to 1.0, capped at 1.0)
   ///
@@ -105,6 +110,7 @@ class PlanItem extends Equatable {
     int? iconIndex,
     RecurrenceType? recurrenceType,
     double? actualAmount,
+    bool? isTrackingOnly,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -117,6 +123,7 @@ class PlanItem extends Equatable {
       iconIndex: iconIndex ?? this.iconIndex,
       recurrenceType: recurrenceType ?? this.recurrenceType,
       actualAmount: actualAmount ?? this.actualAmount,
+      isTrackingOnly: isTrackingOnly ?? this.isTrackingOnly,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -132,6 +139,7 @@ class PlanItem extends Equatable {
         iconIndex,
         recurrenceType,
         actualAmount,
+        isTrackingOnly,
         createdAt,
         updatedAt,
       ];

@@ -74,7 +74,7 @@ class PlanItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppDimens.radiusPill),
                   ),
                   child: Text(
-                    '${pctUsed.toStringAsFixed(0)}%',
+                    item.isTrackingOnly ? 'Tracking' : '${pctUsed.toStringAsFixed(0)}%',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

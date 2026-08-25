@@ -1,12 +1,18 @@
 import 'package:app_template/domain/entities/plan_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-PlanItem _item({required double expected, double actual = 0}) => PlanItem(
+PlanItem _item({
+  required double expected,
+  double actual = 0,
+  bool isTrackingOnly = false,
+}) =>
+    PlanItem(
       id: 'i1',
       planId: 'p1',
       name: 'Groceries',
       expectedAmount: expected,
       actualAmount: actual,
+      isTrackingOnly: isTrackingOnly,
     );
 
 void main() {
@@ -84,6 +90,32 @@ void main() {
 
     test('fully reimbursed item reads as noActivity', () {
       expect(_item(expected: 100, actual: 0).status, PlanItemStatus.noActivity);
+    });
+  });
+
+  group('PlanItem.isTrackingOnly (e.g. money lent out)', () {
+    test('never reports overBudget even when actual far exceeds expected', () {
+      final item = _item(expected: 100, actual: 500, isTrackingOnly: true);
+      expect(item.isOverBudget, isFalse);
+      expect(item.status, isNot(PlanItemStatus.overBudget));
+    });
+
+    test('never reports nearLimit at the 85%+ threshold', () {
+      final item = _item(expected: 100, actual: 90, isTrackingOnly: true);
+      expect(item.isNearLimit, isFalse);
+      expect(item.status, isNot(PlanItemStatus.nearLimit));
+    });
+
+    test('a matching non-tracking item at the same amounts does alarm', () {
+      final tracked = _item(expected: 100, actual: 500, isTrackingOnly: false);
+      expect(tracked.status, PlanItemStatus.overBudget);
+    });
+
+    test('status still reflects activity normally otherwise', () {
+      expect(_item(expected: 100, actual: 0, isTrackingOnly: true).status,
+          PlanItemStatus.noActivity);
+      expect(_item(expected: 100, actual: 30, isTrackingOnly: true).status,
+          PlanItemStatus.inProgress);
     });
   });
 }

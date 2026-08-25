@@ -11,6 +11,7 @@ class PlanItemModel extends PlanItem {
     super.iconIndex,
     super.recurrenceType,
     super.actualAmount,
+    super.isTrackingOnly,
     super.createdAt,
     super.updatedAt,
   });
@@ -27,6 +28,7 @@ class PlanItemModel extends PlanItem {
       actualAmount: json['actual_amount'] != null
           ? (json['actual_amount'] as num).toDouble()
           : 0,
+      isTrackingOnly: json['is_tracking_only'] as bool? ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String).toLocal()
           : null,
@@ -43,6 +45,7 @@ class PlanItemModel extends PlanItem {
       'name': name,
       'expected_amount': expectedAmount,
       'recurrence_type': recurrenceType.value,
+      'is_tracking_only': isTrackingOnly,
     };
   }
 
@@ -54,6 +57,7 @@ class PlanItemModel extends PlanItem {
       'expected_amount': expectedAmount,
       'icon_index': iconIndex,
       'recurrence_type': recurrenceType.value,
+      'is_tracking_only': isTrackingOnly,
     };
   }
 
@@ -64,6 +68,7 @@ class PlanItemModel extends PlanItem {
       'expected_amount': expectedAmount,
       'icon_index': iconIndex,
       'recurrence_type': recurrenceType.value,
+      'is_tracking_only': isTrackingOnly,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -78,6 +83,7 @@ class PlanItemModel extends PlanItem {
       iconIndex: item.iconIndex,
       recurrenceType: item.recurrenceType,
       actualAmount: item.actualAmount,
+      isTrackingOnly: item.isTrackingOnly,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     );
@@ -93,6 +99,7 @@ class PlanItemModel extends PlanItem {
       iconIndex: iconIndex,
       recurrenceType: recurrenceType,
       actualAmount: actualAmount,
+      isTrackingOnly: isTrackingOnly,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -108,6 +115,7 @@ class PlanItemModel extends PlanItem {
       iconIndex: iconIndex,
       recurrenceType: recurrenceType,
       actualAmount: actual,
+      isTrackingOnly: isTrackingOnly,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

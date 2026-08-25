@@ -37,9 +37,12 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
   bool _isLoading = false;
   bool _isLoadingItems = true;
 
-  /// Calculate total planned expenses from items
+  /// Calculate total planned expenses from items (tracking-only items, e.g.
+  /// money lent out, don't compete for budget headroom)
   double get _totalPlannedExpenses {
-    return _planItems.fold(0.0, (sum, item) => sum + item.expectedAmount);
+    return _planItems
+        .where((item) => !item.isTrackingOnly)
+        .fold(0.0, (sum, item) => sum + item.expectedAmount);
   }
 
   /// Calculate total actual expenses from items
@@ -147,6 +150,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
           expectedAmount: result['amount'] as double,
           iconIndex: result['iconIndex'] as int?,
           recurrenceType: result['recurrenceType'] as RecurrenceType? ?? RecurrenceType.daily,
+          isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
         );
         await _loadPlanItems();
       } catch (e) {
@@ -179,6 +183,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
             expectedAmount: result['amount'] as double,
             iconIndex: result['iconIndex'] as int?,
             recurrenceType: result['recurrenceType'] as RecurrenceType?,
+            isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
           ),
         );
         await _loadPlanItems();

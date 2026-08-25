@@ -113,6 +113,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
               expectedAmount: result['amount'] as double,
               iconIndex: result['iconIndex'] as int?,
               recurrenceType: result['recurrenceType'] as RecurrenceType? ?? RecurrenceType.daily,
+              isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
             ),
           );
     }
@@ -140,6 +141,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
               expectedAmount: result['amount'] as double,
               iconIndex: result['iconIndex'] as int?,
               recurrenceType: result['recurrenceType'] as RecurrenceType?,
+              isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
             ),
           );
     }

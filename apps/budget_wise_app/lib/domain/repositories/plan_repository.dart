@@ -47,6 +47,7 @@ abstract class PlanRepository {
     required double expectedAmount,
     int? iconIndex,
     RecurrenceType recurrenceType = RecurrenceType.daily,
+    bool isTrackingOnly = false,
   });
 
   /// Update a plan item

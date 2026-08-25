@@ -146,8 +146,9 @@ class InsightState extends Equatable {
 
   double get netAmount => totalIncome - totalExpense;
 
-  double get totalBudget =>
-      planItems.fold(0.0, (sum, item) => sum + item.expectedAmount);
+  double get totalBudget => planItems
+      .where((item) => !item.isTrackingOnly)
+      .fold(0.0, (sum, item) => sum + item.expectedAmount);
 
   /// Plan item ID → name map
   Map<String, String> get _planItemNames {

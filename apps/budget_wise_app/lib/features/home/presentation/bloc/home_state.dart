@@ -30,8 +30,9 @@ class HomeState extends Equatable {
 
   int get accountCount => accounts.length;
 
-  double get totalPlannedExpenses =>
-      planItems.fold(0, (sum, item) => sum + item.expectedAmount);
+  double get totalPlannedExpenses => planItems
+      .where((item) => !item.isTrackingOnly)
+      .fold(0, (sum, item) => sum + item.expectedAmount);
 
   double get totalActualExpenses =>
       planItems.fold(0, (sum, item) => sum + item.actualAmount);

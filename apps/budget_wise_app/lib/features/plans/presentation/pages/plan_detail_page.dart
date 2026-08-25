@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../di/injection.dart';
@@ -197,6 +198,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
   void _showItemMenu(PlanItem item) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: context.colors.cardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -204,28 +206,20 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            context.styles.sheetHandle(),
             ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit Item'),
+              leading: Icon(Icons.edit, color: context.colors.textPrimary),
+              title: Text('Edit Item', style: context.styles.bodyMedium),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _navigateToEditItem(item);
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete, color: Colors.red.shade700),
+              leading: Icon(Icons.delete, color: context.colors.expense),
               title: Text(
                 'Delete Item',
-                style: TextStyle(color: Colors.red.shade700),
+                style: TextStyle(color: context.colors.expense),
               ),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -264,7 +258,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade700,
+              backgroundColor: context.colors.expense,
               foregroundColor: Colors.white,
             ),
             child: const Text('Delete'),
@@ -283,15 +277,9 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
     final currencyFormat = NumberFormat.currency(symbol: '฿', decimalDigits: 0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F8),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF3B82F6),
-        foregroundColor: Colors.white,
-        title: Text(
-          _currentPlan.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        elevation: 0,
+      backgroundColor: context.colors.scaffoldBg,
+      appBar: context.styles.appBar(
+        title: _currentPlan.name,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -300,12 +288,13 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF3B82F6),
+                color: context.colors.accent,
               ),
             )
           : RefreshIndicator(
+              color: context.colors.primary,
               onRefresh: _refreshPlanData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -333,17 +322,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
   Widget _buildSummaryCard(DateFormat dateFormat, NumberFormat currencyFormat) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: context.styles.card,
       child: Column(
         children: [
           // Status Badge
@@ -353,19 +332,19 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.green[50],
+                color: context.colors.incomeLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, size: 18, color: Colors.green[700]),
+                  Icon(Icons.check_circle, size: 18, color: context.colors.income),
                   const SizedBox(width: 8),
                   Text(
                     'Active Plan',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Colors.green[700],
+                      color: context.colors.income,
                     ),
                   ),
                 ],
@@ -375,23 +354,20 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
           // Date Range
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_today,
                 size: 20,
-                color: Color(0xFF3B82F6),
+                color: context.colors.accent,
               ),
               const SizedBox(width: 8),
               Text(
                 '${dateFormat.format(_currentPlan.startDate)} - ${dateFormat.format(_currentPlan.endDate)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: context.styles.bodyLarge,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          const Divider(),
+          Divider(color: context.colors.divider),
           const SizedBox(height: 16),
 
           // Budget Summary
@@ -400,7 +376,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               label: 'Expected Income',
               value: CurrencyUtils.formatCurrency(
                   _currentPlan.expectedIncome ?? 0),
-              valueColor: const Color(0xFF3B82F6),
+              valueColor: context.colors.accent,
             ),
             const SizedBox(height: 12),
           ],
@@ -408,7 +384,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
           _SummaryRow(
             label: 'Total Items Planned',
             value: CurrencyUtils.formatCurrency(_totalPlannedExpenses),
-            valueColor: Colors.grey[700]!,
+            valueColor: context.colors.textSecondary,
           ),
           const SizedBox(height: 12),
 
@@ -416,8 +392,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
             label: 'Total Spent',
             value: CurrencyUtils.formatCurrency(_totalActualExpenses),
             valueColor: _totalActualExpenses > _totalPlannedExpenses
-                ? Colors.red.shade700
-                : Colors.grey[700]!,
+                ? context.colors.expense
+                : context.colors.textSecondary,
           ),
 
           if (_currentPlan.expectedIncome != null) ...[
@@ -429,8 +405,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               ),
               valueColor:
                   (_currentPlan.expectedIncome! - _totalActualExpenses) < 0
-                      ? Colors.red.shade700
-                      : Colors.green.shade700,
+                      ? context.colors.expense
+                      : context.colors.income,
             ),
           ],
         ],
@@ -446,29 +422,22 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Plan Items',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            Text('Plan Items', style: context.styles.titleMedium),
             GestureDetector(
               onTap: _navigateToAddItem,
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(
                     Icons.add,
                     size: 18,
-                    color: Color(0xFF3B82F6),
+                    color: context.colors.accent,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     'Add Item',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF3B82F6),
+                      color: context.colors.accent,
                     ),
                   ),
                 ],
@@ -481,11 +450,11 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
 
         // Items List
         if (_isLoadingItems)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: CircularProgressIndicator(
-                color: Color(0xFF3B82F6),
+                color: context.colors.accent,
               ),
             ),
           )
@@ -493,9 +462,9 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.colors.cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: context.colors.border),
             ),
             child: Center(
               child: Column(
@@ -503,39 +472,23 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                   Icon(
                     Icons.inbox_outlined,
                     size: 48,
-                    color: Colors.grey.shade400,
+                    color: context.colors.textTertiary,
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'No plan items yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
+                  Text('No plan items yet', style: context.styles.bodyLarge),
                   const SizedBox(height: 4),
-                  Text(
-                    'Add items to track your budget',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
+                  Text('Add items to track your budget', style: context.styles.bodySmall),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: _navigateToAddItem,
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Item'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                    style: context.styles.primaryButton.copyWith(
+                      padding: const WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      shape: WidgetStatePropertyAll(
+                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                   ),
@@ -579,13 +532,7 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            color: Colors.grey[700],
-          ),
-        ),
+        Text(label, style: context.styles.bodyMedium.copyWith(color: context.colors.textSecondary)),
         Text(
           value,
           style: TextStyle(

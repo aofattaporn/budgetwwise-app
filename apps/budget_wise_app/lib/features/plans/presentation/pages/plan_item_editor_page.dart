@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -189,7 +189,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+            Icon(Icons.warning_amber_rounded, color: const Color(0xFFE08A3C)),
             const SizedBox(width: 8),
             Expanded(child: Text(title, style: const TextStyle(fontSize: 18))),
           ],
@@ -700,9 +700,9 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
     return Container(
       padding: const EdgeInsets.all(AppDimens.cardPadding),
       decoration: BoxDecoration(
-        color: hasBudgetIssue ? Colors.orange.shade50 : context.colors.surfaceLight,
+        color: hasBudgetIssue ? const Color(0xFFFFF4E5) : context.colors.surfaceLight,
         border: Border.all(
-          color: hasBudgetIssue ? Colors.orange.shade300 : context.colors.border,
+          color: hasBudgetIssue ? const Color(0xFFFFC48A) : context.colors.border,
         ),
         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       ),
@@ -717,14 +717,14 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
                 Icon(
                   Icons.warning_amber_rounded,
                   size: 16,
-                  color: Colors.orange.shade700,
+                  color: const Color(0xFFE08A3C),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   'Exceeds Budget',
                   style: context.styles.caption.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: Colors.orange.shade700,
+                    color: const Color(0xFFE08A3C),
                   ),
                 ),
               ],
@@ -769,7 +769,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: const Color(0xFFFFE8CC),
                 borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
               child: Row(
@@ -777,7 +777,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Colors.orange.shade800,
+                    color: const Color(0xFFC76E1F),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -785,7 +785,7 @@ class _PlanItemEditorPageState extends State<PlanItemEditorPage> {
                       'This amount exceeds your available budget. Reduce the amount or increase plan income.',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.orange.shade800,
+                        color: const Color(0xFFC76E1F),
                       ),
                     ),
                   ),

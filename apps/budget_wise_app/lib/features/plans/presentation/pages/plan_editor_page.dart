@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -104,7 +104,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3B82F6),
+              primary: Color(0xFF2F6BFF),
             ),
           ),
           child: child!,
@@ -133,7 +133,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3B82F6),
+              primary: Color(0xFF2F6BFF),
             ),
           ),
           child: child!,
@@ -230,7 +230,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+            Icon(Icons.warning_amber_rounded, color: const Color(0xFFE08A3C)),
             const SizedBox(width: 8),
             Expanded(child: Text(title)),
           ],
@@ -495,9 +495,9 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
     return Container(
       padding: const EdgeInsets.all(AppDimens.cardPadding),
       decoration: BoxDecoration(
-        color: hasBudgetIssue ? Colors.orange.shade50 : context.colors.surfaceLight,
+        color: hasBudgetIssue ? const Color(0xFFFFF4E5) : context.colors.surfaceLight,
         border: Border.all(
-          color: hasBudgetIssue ? Colors.orange.shade300 : context.colors.border,
+          color: hasBudgetIssue ? const Color(0xFFFFC48A) : context.colors.border,
         ),
         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       ),
@@ -509,13 +509,13 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
               Text('Preview', style: context.styles.label),
               if (hasBudgetIssue) ...[
                 const Spacer(),
-                Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange.shade700),
+                Icon(Icons.warning_amber_rounded, size: 16, color: const Color(0xFFE08A3C)),
                 const SizedBox(width: 4),
                 Text(
                   'Budget Issue',
                   style: context.styles.caption.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: Colors.orange.shade700,
+                    color: const Color(0xFFE08A3C),
                   ),
                 ),
               ],
@@ -539,7 +539,7 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
             _buildPreviewRow(
               'Total Planned Items',
               CurrencyUtils.formatCurrency(widget.currentTotalPlanned),
-              valueColor: hasBudgetIssue ? Colors.orange.shade700 : null,
+              valueColor: hasBudgetIssue ? const Color(0xFFE08A3C) : null,
             ),
           ],
           if (expectedIncome > 0 && widget.currentTotalPlanned > 0) ...[
@@ -559,17 +559,17 @@ class _PlanEditorPageState extends State<PlanEditorPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: const Color(0xFFFFE8CC),
                 borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.orange.shade800),
+                  Icon(Icons.info_outline, size: 16, color: const Color(0xFFC76E1F)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Expected income is less than total planned. Increase income or reduce plan items.',
-                      style: context.styles.caption.copyWith(color: Colors.orange.shade800, fontSize: 11),
+                      style: context.styles.caption.copyWith(color: const Color(0xFFC76E1F), fontSize: 11),
                     ),
                   ),
                 ],

@@ -5,6 +5,7 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/account.dart';
 import '../bloc/account_bloc.dart';
+import '../widgets/bank_card.dart';
 import '../widgets/dashed_border_painter.dart';
 import 'account_create_screen.dart';
 import 'account_detail_page.dart';
@@ -125,7 +126,7 @@ class _AccountScreenState extends State<AccountScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red[700],
+              foregroundColor: context.colors.expense,
             ),
             child: const Text('Delete'),
           ),
@@ -248,21 +249,7 @@ class _AccountScreenState extends State<AccountScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      decoration: context.styles.hero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -346,10 +333,10 @@ class _AccountScreenState extends State<AccountScreen> {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       itemCount: accounts.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final account = accounts[index];
-        return _AccountCard(
+        return BankCard(
           account: account,
           onTap: () => _onAccountTap(account),
           onMenuTap: () => _showAccountMenu(account),
@@ -393,115 +380,3 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 }
-
-/// ═══════════════════════════════════════════════════════════════════════════
-/// Account Card Widget - Individual account display
-/// ═══════════════════════════════════════════════════════════════════════════
-class _AccountCard extends StatelessWidget {
-  final Account account;
-  final VoidCallback onTap;
-  final VoidCallback onMenuTap;
-
-  const _AccountCard({
-    required this.account,
-    required this.onTap,
-    required this.onMenuTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final typeColor = _getColorForType(account.type);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-      child: Container(
-        padding: const EdgeInsets.all(AppDimens.cardPadding),
-        decoration: context.styles.card,
-        child: Row(
-          children: [
-            context.styles.iconBox(
-              icon: _getIconForType(account.type),
-              size: AppDimens.iconMd,
-              bgColor: typeColor.withValues(alpha: 0.12),
-              iconColor: typeColor,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(account.name, style: context.styles.bodyLarge),
-                  const SizedBox(height: 2),
-                  Text(_getTypeName(account.type), style: context.styles.caption),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  CurrencyUtils.formatCurrency(account.balance),
-                  style: context.styles.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.chevron_right, color: context.colors.textTertiary, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Get icon for account type
-  IconData _getIconForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return Icons.money_rounded;
-      case 'bank':
-        return Icons.account_balance;
-      case 'debit':
-        return Icons.credit_card;
-      case 'ewallet':
-      case 'e-wallet':
-        return Icons.wallet;
-      default:
-        return Icons.account_balance_wallet;
-    }
-  }
-
-  /// Distinct, subtle accent hue per account type. Deliberately avoids the
-  /// income-green so it doesn't clash with balance/transaction semantics.
-  Color _getColorForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return const Color(0xFFF59E0B); // amber
-      case 'ewallet':
-      case 'e-wallet':
-        return const Color(0xFF14B8A6); // teal
-      case 'bank':
-      case 'debit':
-      default:
-        return const Color(0xFF3B82F6); // blue
-    }
-  }
-
-  /// Get display name for account type
-  String _getTypeName(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return 'Cash';
-      case 'bank':
-        return 'Bank Account';
-      case 'debit':
-        return 'Debit Card';
-      case 'ewallet':
-      case 'e-wallet':
-        return 'E-Wallet';
-      default:
-        return type;
-    }
-  }
-}
-
-

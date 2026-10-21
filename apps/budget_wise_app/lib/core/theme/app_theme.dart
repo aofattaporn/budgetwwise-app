@@ -46,43 +46,43 @@ class AppColors {
   // ── Light palette ─────────────────────────────────────────────────────
   // Modern indigo brand on cool zinc neutrals.
   static const light = AppColors._(
-    primary: Color(0xFF18181B),
-    accent: Color(0xFF3B82F6),
-    accentLight: Color(0xFFEFF6FF),
-    scaffoldBg: Color(0xFFFAFAFA),
+    primary: Color(0xFF2F6BFF),
+    accent: Color(0xFF5B9DFF),
+    accentLight: Color(0xFFE8F0FF),
+    scaffoldBg: Color(0xFFF5F7FB),
     cardBg: Color(0xFFFFFFFF),
-    surfaceLight: Color(0xFFF4F4F7),
-    textPrimary: Color(0xFF18181B),
-    textSecondary: Color(0xFF6B7280),
-    textTertiary: Color(0xFF9CA3AF),
+    surfaceLight: Color(0xFFEDF1F8),
+    textPrimary: Color(0xFF111827),
+    textSecondary: Color(0xFF5B6475),
+    textTertiary: Color(0xFF8E97A8),
     textOnPrimary: Color(0xFFFFFFFF),
-    income: Color(0xFF10B981),
-    expense: Color(0xFFEF4444),
-    incomeLight: Color(0xFFECFDF5),
-    expenseLight: Color(0xFFFEF2F2),
-    border: Color(0xFFE5E7EB),
-    divider: Color(0xFFF3F4F6),
+    income: Color(0xFF2FBF8A),
+    expense: Color(0xFFFF6F85),
+    incomeLight: Color(0xFFE3F7EF),
+    expenseLight: Color(0xFFFFEAEE),
+    border: Color(0xFFE3E8F0),
+    divider: Color(0xFFEDF0F6),
   );
 
   // ── Dark palette ──────────────────────────────────────────────────────
   // Lighter indigo accent for contrast on near-black zinc surfaces.
   static const dark = AppColors._(
-    primary: Color(0xFFE4E4F0),
-    accent: Color(0xFF60A5FA),
-    accentLight: Color(0xFF1C2A40),
-    scaffoldBg: Color(0xFF121214),
-    cardBg: Color(0xFF1C1C1F),
-    surfaceLight: Color(0xFF27272B),
-    textPrimary: Color(0xFFE4E4E7),
-    textSecondary: Color(0xFFA1A1AA),
-    textTertiary: Color(0xFF71717A),
+    primary: Color(0xFF8DB8FF),
+    accent: Color(0xFF4F9BFF),
+    accentLight: Color(0xFF14264A),
+    scaffoldBg: Color(0xFF07080B),
+    cardBg: Color(0xFF12141A),
+    surfaceLight: Color(0xFF1A1D26),
+    textPrimary: Color(0xFFF1F3F8),
+    textSecondary: Color(0xFFA3AAB8),
+    textTertiary: Color(0xFF6B7280),
     textOnPrimary: Color(0xFFFFFFFF),
-    income: Color(0xFF34D399),
-    expense: Color(0xFFF87171),
-    incomeLight: Color(0xFF132A22),
-    expenseLight: Color(0xFF2A1717),
-    border: Color(0xFF2E2E36),
-    divider: Color(0xFF242428),
+    income: Color(0xFF5FDDAE),
+    expense: Color(0xFFFF8D9B),
+    incomeLight: Color(0xFF14302A),
+    expenseLight: Color(0xFF3A1F28),
+    border: Color(0xFF242836),
+    divider: Color(0xFF1C1F28),
   );
 
   /// Resolve the palette for the current brightness.
@@ -94,13 +94,13 @@ class AppColors {
 class AppDimens {
   AppDimens._();
 
-  static const double radiusSm = 10.0;
-  static const double radiusMd = 14.0;
-  static const double radiusLg = 20.0;
+  static const double radiusSm = 14.0;
+  static const double radiusMd = 20.0;
+  static const double radiusLg = 28.0;
   static const double radiusPill = 100.0;
 
   static const double pagePadding = 20.0;
-  static const double cardPadding = 18.0;
+  static const double cardPadding = 20.0;
 
   static const double iconSm = 32.0;
   static const double iconMd = 40.0;
@@ -123,21 +123,47 @@ class AppStyles {
     return BoxDecoration(
       color: _c.cardBg,
       borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-      border: isDark ? Border.all(color: _c.border, width: 0.5) : null,
+      border: isDark ? Border.all(color: _c.border, width: 1) : null,
       boxShadow: isDark
           ? null
           : const [
               BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 18,
-                offset: Offset(0, 6),
+                color: Color(0x142F6BFF),
+                blurRadius: 24,
+                offset: Offset(0, 8),
               ),
               BoxShadow(
-                color: Color(0x0A000000),
+                color: Color(0x08000000),
                 blurRadius: 4,
                 offset: Offset(0, 1),
               ),
             ],
+    );
+  }
+
+  /// Large summary card. Light: vivid blue gradient. Dark: deep navy gradient
+  /// with a hairline highlight and a soft blue glow.
+  BoxDecoration get hero {
+    final isDark = identical(_c, AppColors.dark);
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? const [Color(0xFF1E3A8A), Color(0xFF0F1B3D), Color(0xFF0B1226)]
+            : const [Color(0xFF5B9DFF), Color(0xFF2F6BFF)],
+      ),
+      borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+      border: isDark
+          ? Border.all(color: const Color(0x335B9DFF), width: 1)
+          : null,
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF2F6BFF).withValues(alpha: isDark ? 0.28 : 0.30),
+          blurRadius: isDark ? 36 : 24,
+          offset: const Offset(0, 12),
+        ),
+      ],
     );
   }
 
@@ -227,22 +253,22 @@ class AppStyles {
       filled: true,
       fillColor: _c.surfaceLight,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         borderSide: BorderSide(color: _c.accent, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         borderSide: BorderSide(color: _c.expense),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     );
   }
 
@@ -253,18 +279,18 @@ class AppStyles {
       backgroundColor: isDark ? _c.accent : _c.primary,
       foregroundColor: _c.textOnPrimary,
       elevation: 0,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimens.radiusPill),
       ),
-      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
     );
   }
 
   ButtonStyle get secondaryButton => OutlinedButton.styleFrom(
         foregroundColor: _c.textSecondary,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusPill),
         ),
@@ -281,11 +307,11 @@ class AppStyles {
   }) {
     final isDark = identical(_c, AppColors.dark);
     return AppBar(
-      backgroundColor: _c.cardBg,
+      backgroundColor: _c.scaffoldBg,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      title: Text(title, style: titleMedium),
+      title: Text(title, style: titleLarge),
       centerTitle: false,
       iconTheme: IconThemeData(color: _c.textPrimary),
       actions: actions,
@@ -293,21 +319,17 @@ class AppStyles {
       automaticallyImplyLeading: showBack,
       systemOverlayStyle:
           isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(color: _c.border, height: 0.5),
-      ),
     );
   }
 
   // ── Bottom Sheet ───────────────────────────────────────────────────────
   Widget sheetHandle() => Container(
-        width: 36,
-        height: 4,
+        width: 40,
+        height: 5,
         margin: const EdgeInsets.only(top: 12, bottom: 8),
         decoration: BoxDecoration(
           color: _c.border,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(3),
         ),
       );
 
@@ -318,7 +340,7 @@ class AppStyles {
     Color? bgColor,
     Color? iconColor,
     double iconSize = 20,
-    double radius = 10,
+    double radius = 14,
   }) {
     return Container(
       width: size,

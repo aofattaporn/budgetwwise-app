@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/bank_card.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -242,6 +243,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: BankCard(account: _account),
+              ),
               _buildInfoCard(),
               _buildTransactionsSection(),
             ],
@@ -259,27 +264,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              context.styles.iconBox(
-                icon: _getIconForType(_account.type),
-                size: AppDimens.iconMd,
-                bgColor: _getColorForType(_account.type).withValues(alpha: 0.12),
-                iconColor: _getColorForType(_account.type),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_account.name, style: context.styles.titleLarge),
-                    const SizedBox(height: 2),
-                    Text(_getTypeName(_account.type), style: context.styles.caption),
-                  ],
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 20),
           _buildInfoRow('Current Balance', CurrencyUtils.formatCurrency(_account.balance), isBold: true),
           Padding(
@@ -408,51 +392,4 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
-
-  IconData _getIconForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return Icons.money_rounded;
-      case 'bank':
-        return Icons.account_balance;
-      case 'debit':
-        return Icons.credit_card;
-      case 'ewallet':
-      case 'e-wallet':
-        return Icons.wallet;
-      default:
-        return Icons.account_balance_wallet;
-    }
-  }
-
-  String _getTypeName(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return 'Cash';
-      case 'bank':
-        return 'Bank Account';
-      case 'debit':
-        return 'Debit Card';
-      case 'ewallet':
-      case 'e-wallet':
-        return 'E-Wallet';
-      default:
-        return type;
-    }
-  }
-
-  /// Distinct, subtle accent hue per account type (matches the accounts list).
-  Color _getColorForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return const Color(0xFFF59E0B); // amber
-      case 'ewallet':
-      case 'e-wallet':
-        return const Color(0xFF14B8A6); // teal
-      case 'bank':
-      case 'debit':
-      default:
-        return const Color(0xFF3B82F6); // blue
-    }
-  }
 }

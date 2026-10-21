@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../accounts/domain/entities/account.dart';
+import '../../../accounts/presentation/widgets/bank_card.dart';
 import '../../../../domain/entities/plan_item.dart';
 import '../../domain/entities/transaction.dart';
 import '../bloc/transaction_editor_bloc.dart';
@@ -269,35 +270,30 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
         const SizedBox(height: 12),
         GestureDetector(
           onTap: () => _showAccountPicker(state),
-          child: Container(
-            padding: const EdgeInsets.all(AppDimens.cardPadding),
-            decoration: context.styles.card,
-            child: Row(
-              children: [
-                context.styles.iconBox(icon: Icons.account_balance_wallet, size: 36),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        state.selectedAccount?.name ?? 'Select Account',
-                        style: state.selectedAccount != null ? context.styles.bodyLarge : context.styles.bodySmall,
-                      ),
-                      if (state.selectedAccount != null)
-                        Text(
-                          'Balance: ${CurrencyUtils.formatCurrency(state.selectedAccount!.balance)}',
-                          style: context.styles.caption,
-                        ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.keyboard_arrow_down, color: context.colors.textTertiary),
-              ],
-            ),
-          ),
+          child: _accountTile(state.selectedAccount, 'Select Account'),
         ),
       ],
+    );
+  }
+
+  Widget _accountTile(Account? account, String placeholder) {
+    if (account == null) {
+      return Container(
+        padding: const EdgeInsets.all(AppDimens.cardPadding),
+        decoration: context.styles.card,
+        child: Row(
+          children: [
+            context.styles.iconBox(icon: Icons.account_balance_wallet_rounded, size: 44),
+            const SizedBox(width: 12),
+            Expanded(child: Text(placeholder, style: context.styles.bodySmall)),
+            Icon(Icons.keyboard_arrow_down_rounded, color: context.colors.textTertiary),
+          ],
+        ),
+      );
+    }
+    return BankCard(
+      account: account,
+      trailing: const Icon(Icons.unfold_more_rounded, size: 22, color: Colors.white),
     );
   }
 
@@ -305,7 +301,7 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => _AccountPickerSheet(
         accounts: state.accounts,
@@ -332,33 +328,7 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
         const SizedBox(height: 12),
         GestureDetector(
           onTap: () => _showDestinationAccountPicker(state),
-          child: Container(
-            padding: const EdgeInsets.all(AppDimens.cardPadding),
-            decoration: context.styles.card,
-            child: Row(
-              children: [
-                context.styles.iconBox(icon: Icons.account_balance_wallet, size: 36),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        state.selectedDestinationAccount?.name ?? 'Select Destination Account',
-                        style: state.selectedDestinationAccount != null ? context.styles.bodyLarge : context.styles.bodySmall,
-                      ),
-                      if (state.selectedDestinationAccount != null)
-                        Text(
-                          'Balance: ${CurrencyUtils.formatCurrency(state.selectedDestinationAccount!.balance)}',
-                          style: context.styles.caption,
-                        ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.keyboard_arrow_down, color: context.colors.textTertiary),
-              ],
-            ),
-          ),
+          child: _accountTile(state.selectedDestinationAccount, 'Select Destination Account'),
         ),
       ],
     );
@@ -373,7 +343,7 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => _AccountPickerSheet(
         accounts: availableAccounts,
@@ -448,7 +418,7 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => _PlanItemPickerSheet(
         planItems: state.planItems,
@@ -647,30 +617,35 @@ class _AccountPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Select Account', style: context.styles.titleLarge),
-          ),
-          const SizedBox(height: 12),
-          ...accounts.map((account) => ListTile(
-                leading: context.styles.iconBox(icon: Icons.account_balance_wallet, size: 36),
-                title: Text(account.name, style: context.styles.bodyLarge),
-                subtitle: Text(
-                  'Balance: ${CurrencyUtils.formatCurrency(account.balance)}',
-                  style: context.styles.caption,
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            context.styles.sheetHandle(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Text('Select Account', style: context.styles.titleLarge),
+            ),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                itemCount: accounts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, i) => BankCard(
+                  account: accounts[i],
+                  selected: accounts[i].id == selectedId,
+                  onTap: () => onSelected(accounts[i].id),
                 ),
-                trailing: account.id == selectedId
-                    ? Icon(Icons.check_circle, color: context.colors.accent)
-                    : null,
-                onTap: () => onSelected(account.id),
-              )),
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

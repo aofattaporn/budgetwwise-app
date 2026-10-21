@@ -31,8 +31,8 @@ class AppFloatingActionButton extends StatelessWidget {
       tooltip: tooltip,
       backgroundColor: backgroundColor ?? context.colors.accent,
       foregroundColor: foregroundColor ?? Colors.white,
-      elevation: elevation ?? 6,
-      shape: const CircleBorder(),
+      elevation: elevation ?? 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Icon(
         icon,
         size: 28,

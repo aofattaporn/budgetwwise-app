@@ -123,7 +123,7 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: isActive ? context.colors.accentLight : context.colors.surfaceLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
         isActive ? 'Active' : 'Inactive',
@@ -148,21 +148,7 @@ class _PlanOverviewSectionState extends State<PlanOverviewSection> {
     // total-balance hero for app-wide consistency.
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      decoration: context.styles.hero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

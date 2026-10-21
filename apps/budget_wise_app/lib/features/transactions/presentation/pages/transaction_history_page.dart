@@ -394,7 +394,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? context.colors.accent : context.colors.cardBg,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? context.colors.accent : context.colors.border,
             width: 0.5,

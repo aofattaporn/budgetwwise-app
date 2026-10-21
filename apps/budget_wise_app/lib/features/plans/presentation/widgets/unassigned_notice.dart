@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 /// Widget displaying the unassigned transactions notice
 class UnassignedNotice extends StatelessWidget {
   final int unassignedCount;
@@ -19,8 +21,8 @@ class UnassignedNotice extends StatelessWidget {
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          border: Border.all(color: Colors.grey.shade200),
+          color: context.colors.surfaceLight,
+          border: Border.all(color: context.colors.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -29,7 +31,7 @@ class UnassignedNotice extends StatelessWidget {
             Icon(
               Icons.info_outline,
               size: 16,
-              color: Colors.grey.shade500,
+              color: context.colors.textTertiary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -42,7 +44,7 @@ class UnassignedNotice extends StatelessWidget {
                         : 'All transactions are assigned to plan items',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade700,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   if (unassignedCount > 0) ...[
@@ -51,7 +53,7 @@ class UnassignedNotice extends StatelessWidget {
                       'Tap to review and assign them',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade500,
+                        color: context.colors.textTertiary,
                       ),
                     ),
                   ],

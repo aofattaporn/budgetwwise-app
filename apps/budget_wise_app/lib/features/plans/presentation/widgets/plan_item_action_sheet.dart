@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 import '../../../../domain/entities/plan_item.dart';
 
 /// Bottom sheet menu for plan item actions (Edit / Delete).
@@ -41,7 +43,7 @@ class PlanItemActionSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildDragHandle(),
+          _buildDragHandle(context),
           ListTile(
             leading: const Icon(Icons.edit),
             title: const Text('Edit Item'),
@@ -51,9 +53,9 @@ class PlanItemActionSheet extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.delete, color: Colors.red.shade700),
+            leading: Icon(Icons.delete, color: context.colors.expense),
             title: Text('Delete Item',
-                style: TextStyle(color: Colors.red.shade700)),
+                style: TextStyle(color: context.colors.expense)),
             onTap: () {
               Navigator.pop(context);
               onDelete();
@@ -65,13 +67,13 @@ class PlanItemActionSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDragHandle() {
+  Widget _buildDragHandle(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: context.colors.border,
         borderRadius: BorderRadius.circular(2),
       ),
     );

@@ -10,6 +10,7 @@ import '../../../../di/injection.dart';
 import '../../../../domain/repositories/plan_repository.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
+import '../../../accounts/presentation/widgets/bank_card.dart';
 import '../../../transactions/domain/services/transaction_balance_service.dart';
 import '../../../accounts/presentation/bloc/account_bloc.dart';
 import '../../../plans/presentation/bloc/active_plan_bloc.dart';
@@ -81,15 +82,17 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
           builder: _buildBody,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         heroTag: 'homeCreateTransaction',
         onPressed: _navigateToCreateTransaction,
         backgroundColor: context.colors.accent,
         foregroundColor: Colors.white,
         elevation: 0,
         highlightElevation: 0,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 24),
+        shape: const StadiumBorder(),
+        icon: const Icon(Icons.add_rounded, size: 22),
+        label: const Text('Add',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
       ),
     );
   }
@@ -146,7 +149,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -276,17 +279,108 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     final dateFormat = DateFormat('EEEE, MMM d');
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_getGreeting(), style: context.styles.displayMedium),
-          const SizedBox(height: 4),
-          Text(
-            dateFormat.format(now),
-            style: context.styles.bodySmall,
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [context.colors.accent, const Color(0xFF2F6BFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Icon(Icons.person_rounded,
+                    color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(dateFormat.format(now).toUpperCase(),
+                        style: context.styles.label),
+                    const SizedBox(height: 2),
+                    Text(_getGreeting(), style: context.styles.titleLarge),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              _quickAction(
+                icon: Icons.add_rounded,
+                label: 'Transaction',
+                onTap: _navigateToCreateTransaction,
+                filled: true,
+              ),
+              const SizedBox(width: 10),
+              _quickAction(
+                icon: Icons.today_rounded,
+                label: 'Today',
+                onTap: state.todayTransactions.isEmpty
+                    ? null
+                    : () => _showTodayItemsSheet(state),
+              ),
+              const SizedBox(width: 10),
+              _quickAction(
+                icon: Icons.account_balance_wallet_rounded,
+                label: 'Accounts',
+                onTap: state.accountCount == 0
+                    ? null
+                    : () => _showAccountsSheet(state),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _quickAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+    bool filled = false,
+  }) {
+    final c = context.colors;
+    final enabled = onTap != null;
+    final fg = filled ? Colors.white : (enabled ? c.textPrimary : c.textTertiary);
+    return Expanded(
+      child: Material(
+        color: filled ? c.accent : c.cardBg,
+        shape: StadiumBorder(
+          side: filled ? BorderSide.none : BorderSide(color: c.border),
+        ),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: fg),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -310,7 +404,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     final expenseTotal = state.todayExpenseTotal;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: GestureDetector(
         onTap: count == 0 ? null : () => _showTodayItemsSheet(state),
         child: Container(
@@ -359,7 +453,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
       isScrollControlled: true,
       backgroundColor: context.colors.scaffoldBg,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -422,21 +516,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      decoration: context.styles.hero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -500,19 +580,19 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
           Text(
             CurrencyUtils.formatCurrency(remaining),
             style: const TextStyle(
-              fontSize: 30,
+              fontSize: 38,
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              letterSpacing: -1,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: 18),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.24),
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
@@ -628,11 +708,20 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
     required String detail,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: context.styles.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 28,
+            height: 5,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: valueColor.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
           Text(
             label,
             style: context.styles.label,
@@ -643,9 +732,9 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
               color: valueColor,
             ),
             maxLines: 1,
@@ -750,7 +839,7 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
       isScrollControlled: true,
       backgroundColor: context.colors.scaffoldBg,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -790,63 +879,10 @@ class _HomeOverviewPageState extends State<HomeOverviewPage> {
   }
 
   Widget _buildAccountRow(Account account) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: context.styles.card,
-      child: Row(
-        children: [
-          context.styles.iconBox(icon: _getAccountIcon(account.type)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(account.name, style: context.styles.bodyLarge),
-                const SizedBox(height: 2),
-                Text(_getAccountTypeName(account.type), style: context.styles.caption),
-              ],
-            ),
-          ),
-          Text(
-            CurrencyUtils.formatCurrency(account.balance),
-            style: context.styles.bodyLarge,
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: BankCard(account: account),
     );
-  }
-
-  IconData _getAccountIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return Icons.money_rounded;
-      case 'bank':
-        return Icons.account_balance;
-      case 'debit':
-        return Icons.credit_card;
-      case 'ewallet':
-      case 'e-wallet':
-        return Icons.wallet;
-      default:
-        return Icons.account_balance_wallet;
-    }
-  }
-
-  String _getAccountTypeName(String type) {
-    switch (type.toLowerCase()) {
-      case 'cash':
-        return 'Cash';
-      case 'bank':
-        return 'Bank Account';
-      case 'debit':
-        return 'Debit Card';
-      case 'ewallet':
-      case 'e-wallet':
-        return 'E-Wallet';
-      default:
-        return type;
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

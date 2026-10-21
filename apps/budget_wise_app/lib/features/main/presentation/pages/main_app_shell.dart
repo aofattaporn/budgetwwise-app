@@ -194,7 +194,7 @@ class ProcessingOverlayElement extends InheritedElement {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(color: Color(0xFF3B82F6)),
+                          CircularProgressIndicator(color: Color(0xFF2F6BFF)),
                           SizedBox(height: 16),
                           Text(
                             'Updating data...',

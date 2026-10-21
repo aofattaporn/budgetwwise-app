@@ -302,7 +302,7 @@ class _PlanCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: context.colors.incomeLight,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Text('Active', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.income)),
       );
@@ -313,7 +313,7 @@ class _PlanCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: context.colors.surfaceLight,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Text('Expired', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.textTertiary)),
       );
@@ -323,7 +323,7 @@ class _PlanCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: context.colors.accentLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Text('Upcoming', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.accent)),
     );

@@ -198,7 +198,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: context.colors.expense,
       ),
     );
   }

@@ -47,31 +47,35 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.colors.cardBg,
-        border: Border(
-          top: BorderSide(
-            color: context.colors.divider,
-            width: 0.5,
-          ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
+        decoration: BoxDecoration(
+          color: context.colors.cardBg,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: context.colors.border),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? const Color(0x66000000) : const Color(0x222F6BFF),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(
-              _navItems.length,
-              (index) => BottomNavItem(
-                data: _navItems[index],
-                isSelected: currentIndex == index,
-                onTap: () => onTap(index),
-                activeColor: context.colors.primary,
-                inactiveColor: context.colors.textTertiary,
-              ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(
+            _navItems.length,
+            (index) => BottomNavItem(
+              data: _navItems[index],
+              isSelected: currentIndex == index,
+              onTap: () => onTap(index),
+              activeColor: context.colors.accent,
+              inactiveColor: context.colors.textTertiary,
+              indicatorColor: context.colors.accentLight,
             ),
           ),
         ),

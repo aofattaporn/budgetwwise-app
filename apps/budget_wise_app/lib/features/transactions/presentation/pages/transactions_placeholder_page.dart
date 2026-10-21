@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 /// Transactions placeholder page
 /// 
 /// Temporary UI until actual transactions feature is implemented
@@ -16,7 +18,7 @@ class TransactionsPlaceholderPage extends StatelessWidget {
             Icon(
               Icons.receipt_long,
               size: 64,
-              color: Colors.grey.shade400,
+              color: context.colors.textTertiary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -29,7 +31,7 @@ class TransactionsPlaceholderPage extends StatelessWidget {
             Text(
               'Coming soon...',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade500,
+                    color: context.colors.textTertiary,
                   ),
             ),
           ],

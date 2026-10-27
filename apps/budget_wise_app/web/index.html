@@ -34,6 +34,18 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Flutter's engine removes the viewport tag above on startup and appends
+    // its own with maximum-scale=5.0, which re-enables iOS focus-zoom that the
+    // user can't pinch back out of (Flutter swallows the gesture). Re-lock it.
+    (function () {
+      var locked = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      new MutationObserver(function () {
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (meta && meta.content !== locked) meta.content = locked;
+      }).observe(document.head, { childList: true });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

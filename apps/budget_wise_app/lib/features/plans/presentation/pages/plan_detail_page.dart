@@ -149,7 +149,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
           description: result['description'] as String?,
           expectedAmount: result['amount'] as double,
           iconIndex: result['iconIndex'] as int?,
-          recurrenceType: result['recurrenceType'] as RecurrenceType? ?? RecurrenceType.daily,
+          recurrenceType: result['recurrenceType'] as RecurrenceType? ??
+              RecurrenceType.daily,
           isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
         );
         await _loadPlanItems();
@@ -258,7 +259,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                 await _loadPlanItems();
               } catch (e) {
                 if (mounted) {
-                  context.showSnackBar('Failed to delete item: $e', isError: true);
+                  context.showSnackBar('Failed to delete item: $e',
+                      isError: true);
                 }
               }
             },
@@ -343,7 +345,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, size: 18, color: context.colors.income),
+                  Icon(Icons.check_circle,
+                      size: 18, color: context.colors.income),
                   const SizedBox(width: 8),
                   Text(
                     'Active Plan',
@@ -482,7 +485,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                   const SizedBox(height: 12),
                   Text('No plan items yet', style: context.styles.bodyLarge),
                   const SizedBox(height: 4),
-                  Text('Add items to track your budget', style: context.styles.bodySmall),
+                  Text('Add items to track your budget',
+                      style: context.styles.bodySmall),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: _navigateToAddItem,
@@ -493,7 +497,8 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                         EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
                       shape: WidgetStatePropertyAll(
-                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                   ),
@@ -508,7 +513,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
             itemCount: _planItems.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final item = _planItems[index];
+              final item = _planItems.sortedForDisplay()[index];
               return PlanItemCard(
                 item: item,
                 onTap: () => _navigateToEditItem(item),
@@ -537,7 +542,9 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: context.styles.bodyMedium.copyWith(color: context.colors.textSecondary)),
+        Text(label,
+            style: context.styles.bodyMedium
+                .copyWith(color: context.colors.textSecondary)),
         Text(
           value,
           style: TextStyle(

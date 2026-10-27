@@ -11,11 +11,19 @@ class PlanItemCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onMenuTap;
 
+  /// Extra content rendered inside the card, below the summary (e.g. an editor).
+  final Widget? footer;
+
+  /// Fade the card and mark it inactive once the budget is used up.
+  final bool dimWhenDepleted;
+
   const PlanItemCard({
     super.key,
     required this.item,
     this.onTap,
     this.onMenuTap,
+    this.footer,
+    this.dimWhenDepleted = true,
   });
 
   Color _getProgressColor(BuildContext context) {
@@ -35,131 +43,174 @@ class PlanItemCard extends StatelessWidget {
     final statusColor = _getProgressColor(context);
     final hasStatus = item.status == PlanItemStatus.overBudget ||
         item.status == PlanItemStatus.nearLimit;
-    final pctUsed = item.progressPercentage * 100;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: context.styles.card,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                context.styles.iconBox(
-                  icon: PlanItemIcon.getIcon(item.iconIndex),
-                  size: 40,
-                  iconSize: 20,
-                  radius: 12,
-                  bgColor: statusColor.withValues(alpha: 0.12),
-                  iconColor: statusColor,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item.name, style: context.styles.bodyLarge, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 2),
-                      Text('Expense', style: context.styles.caption),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppDimens.radiusPill),
-                  ),
-                  child: Text(
-                    item.isTrackingOnly ? 'Tracking' : '${pctUsed.toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
+    final isOver = item.isOverBudget;
+    final decoration = context.styles.card.copyWith(
+      border: hasStatus
+          ? Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2)
+          : context.styles.card.border,
+    );
+
+    final dimmed = dimWhenDepleted && item.isDepleted;
+
+    return Opacity(
+      opacity: dimmed ? 0.55 : 1,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: decoration.copyWith(
+            color: dimmed ? context.colors.surfaceLight : null,
+            boxShadow: dimmed ? const [] : null,
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  _buildRing(context, statusColor),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                item.name,
+                                style: context.styles.bodyLarge,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildChip(
+                              context,
+                              item.isTrackingOnly
+                                  ? 'Tracking'
+                                  : item.recurrenceType.label,
+                              context.colors.textSecondary,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                CurrencyUtils.formatCurrency(
+                                    isOver ? item.overAmount : remaining),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                  color: isOver
+                                      ? context.colors.expense
+                                      : context.colors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(isOver ? 'over' : 'left',
+                                style: context.styles.caption),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Spent ${CurrencyUtils.formatCurrency(item.actualAmount)} of ${CurrencyUtils.formatCurrency(item.expectedAmount)}',
+                                style: context.styles.caption,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (hasStatus || dimmed) ...[
+                              const SizedBox(width: 8),
+                              _buildChip(
+                                context,
+                                isOver
+                                    ? 'Over'
+                                    : dimmed
+                                        ? 'Inactive'
+                                        : 'Near limit',
+                                dimmed && !isOver
+                                    ? context.colors.textSecondary
+                                    : statusColor,
+                                filled: true,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: onMenuTap,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Icon(Icons.chevron_right, size: 20, color: context.colors.textTertiary),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Prominent remaining / over, with spent vs planned alongside
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.isOverBudget ? 'Over budget' : 'Remaining',
-                        style: context.styles.caption),
-                    const SizedBox(height: 2),
-                    Text(
-                      CurrencyUtils.formatCurrency(
-                          item.isOverBudget ? item.overAmount : remaining),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        color: item.isOverBudget
-                            ? context.colors.expense
-                            : context.colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${CurrencyUtils.formatCurrency(item.actualAmount)} / ${CurrencyUtils.formatCurrency(item.expectedAmount)}',
-                  style: context.styles.caption,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Progress (remaining — full when unused, decreases as spent)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: 1.0 - item.progressPercentage,
-                backgroundColor: context.colors.surfaceLight,
-                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                minHeight: 6,
+                ],
               ),
-            ),
-
-            if (hasStatus) ...[
-              const SizedBox(height: 10),
-              _buildStatusIndicator(context),
+              if (footer != null) ...[
+                const SizedBox(height: 14),
+                footer!,
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatusIndicator(BuildContext context) {
-    final isOver = item.status == PlanItemStatus.overBudget;
-    final color = isOver ? context.colors.expense : const Color(0xFFD97706);
-    return Row(
-      children: [
-        Icon(isOver ? Icons.error_outline : Icons.warning_amber_outlined, size: 13, color: color),
-        const SizedBox(width: 4),
-        Text(
-          isOver ? 'Over planned amount' : 'Near limit',
-          style: TextStyle(fontSize: 11, color: color),
-        ),
-      ],
+  Widget _buildRing(BuildContext context, Color statusColor) {
+    const size = 64.0;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: size,
+            height: size,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: item.progressPercentage),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => CircularProgressIndicator(
+                value: item.isTrackingOnly ? 0 : value,
+                strokeWidth: 6,
+                strokeCap: StrokeCap.round,
+                backgroundColor: statusColor.withValues(alpha: 0.14),
+                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+              ),
+            ),
+          ),
+          Icon(PlanItemIcon.getIcon(item.iconIndex),
+              size: 22, color: statusColor),
+        ],
+      ),
     );
   }
 
+  Widget _buildChip(BuildContext context, String label, Color color,
+      {bool filled = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: filled
+            ? color.withValues(alpha: 0.14)
+            : context.colors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
 }

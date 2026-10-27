@@ -7,7 +7,7 @@ import '../../../../di/injection.dart';
 import '../../../../domain/entities/plan.dart';
 import '../../../../domain/entities/plan_item.dart';
 import '../../../../domain/repositories/plan_repository.dart';
-import 'plan_item_editor_page.dart';
+import '../widgets/plan_item_card.dart';
 
 /// Revise Plan Page - re-budget every item at once mid-period.
 ///
@@ -75,9 +75,8 @@ class _RevisePlanPageState extends State<RevisePlanPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(revision == null
-            ? 'Plan updated'
-            : 'Saved as version $revision'),
+        content: Text(
+            revision == null ? 'Plan updated' : 'Saved as version $revision'),
       ));
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -96,18 +95,27 @@ class _RevisePlanPageState extends State<RevisePlanPage> {
       backgroundColor: context.colors.scaffoldBg,
       appBar: context.styles.appBar(title: 'Revise Plan'),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppDimens.pagePadding),
         children: [
-          Text(
-            'Set new budgets for this period. The current design is kept in '
-            'the plan history so you can compare later.',
-            style: context.styles.caption,
+          _buildSummary(),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Text('Budget items', style: context.styles.label),
+              const Spacer(),
+              Text(
+                _changedAmounts.isEmpty
+                    ? 'No changes'
+                    : '${_changedAmounts.length} changed',
+                style: context.styles.caption.copyWith(
+                  color: _changedAmounts.isEmpty ? null : context.colors.accent,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          ...widget.items.map(_buildItemRow),
-          const SizedBox(height: 8),
-          _buildTotal(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
+          ...widget.items.sortedForDisplay().map(_buildItemRow),
+          const SizedBox(height: 12),
           Text('Reason (optional)', style: context.styles.label),
           const SizedBox(height: 8),
           TextField(
@@ -117,8 +125,23 @@ class _RevisePlanPageState extends State<RevisePlanPage> {
             ),
             maxLines: 2,
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
+          const SizedBox(height: 8),
+          Text(
+            'The current design is kept in the plan history so you can '
+            'compare later.',
+            style: context.styles.caption,
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(
+              AppDimens.pagePadding, 12, AppDimens.pagePadding, 12),
+          decoration: BoxDecoration(
+            color: context.colors.cardBg,
+            border: Border(top: BorderSide(color: context.colors.border)),
+          ),
+          child: ElevatedButton(
             onPressed: _canSave ? _save : null,
             style: context.styles.primaryButton,
             child: _saving
@@ -129,69 +152,180 @@ class _RevisePlanPageState extends State<RevisePlanPage> {
                   )
                 : const Text('Save Revision'),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildItemRow(PlanItem item) {
-    final changed = _amountOf(item) != item.expectedAmount;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: context.styles.card,
-      child: Row(
-        children: [
-          context.styles.iconBox(icon: PlanItemIcon.getIcon(item.iconIndex)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final newAmount = _amountOf(item);
+    final delta = newAmount - item.expectedAmount;
+    final belowSpent = !item.isTrackingOnly && newAmount < item.actualAmount;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlanItemCard(
+        item: item.copyWith(expectedAmount: newAmount),
+        dimWhenDepleted: false,
+        footer: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(item.name, style: context.styles.bodyLarge),
-                Text(
-                  'Spent ${CurrencyUtils.formatCurrency(item.actualAmount)}'
-                  '${changed ? ' · was ${CurrencyUtils.formatCurrency(item.expectedAmount)}' : ''}',
-                  style: context.styles.caption,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          delta == 0
+                              ? 'Current budget'
+                              : 'Was ${CurrencyUtils.formatCurrency(item.expectedAmount)}',
+                          style: context.styles.caption,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (delta != 0) ...[
+                        const SizedBox(width: 8),
+                        _buildDeltaChip(delta),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: 124,
+                  child: TextField(
+                    controller: _controllers[item.id],
+                    textAlign: TextAlign.end,
+                    decoration:
+                        context.styles.input(hint: '0', prefixText: '฿ '),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}')),
+                    ],
+                    onChanged: (_) => setState(() {}),
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 120,
-            child: TextField(
-              controller: _controllers[item.id],
-              textAlign: TextAlign.end,
-              decoration: context.styles.input(hint: '0', prefixText: '฿ '),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-              ],
-              onChanged: (_) => setState(() {}),
-            ),
+            if (belowSpent) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Below what you already spent '
+                '(${CurrencyUtils.formatCurrency(item.actualAmount)})',
+                style: context.styles.caption
+                    .copyWith(color: context.colors.expense),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeltaChip(double delta) {
+    final up = delta > 0;
+    final color = up ? context.colors.income : context.colors.expense;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+              size: 12, color: color),
+          const SizedBox(width: 2),
+          Text(
+            CurrencyUtils.formatCurrency(delta.abs()),
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w700, color: color),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTotal() {
+  Widget _buildSummary() {
     final income = widget.plan.expectedIncome;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Total planned', style: context.styles.label),
-        Text(
-          income == null
-              ? CurrencyUtils.formatCurrency(_totalPlanned)
-              : '${CurrencyUtils.formatCurrency(_totalPlanned)} / ${CurrencyUtils.formatCurrency(income)}',
-          style: context.styles.bodyLarge.copyWith(
-            color: _isOverIncome ? context.colors.expense : null,
-            fontWeight: FontWeight.w600,
+    final planned = _totalPlanned;
+    final original = widget.items
+        .where((i) => !i.isTrackingOnly)
+        .fold(0.0, (sum, i) => sum + i.expectedAmount);
+    final delta = planned - original;
+    final over = _isOverIncome;
+    final accent = over ? context.colors.expense : context.colors.accent;
+    final ratio = (income != null && income > 0)
+        ? (planned / income).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Total planned', style: context.styles.caption),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Text(
+                  CurrencyUtils.formatCurrency(planned),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
+                    color: over
+                        ? context.colors.expense
+                        : context.colors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (delta != 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: _buildDeltaChip(delta),
+                ),
+            ],
           ),
-        ),
-      ],
+          if (income != null) ...[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 8,
+                backgroundColor: accent.withValues(alpha: 0.14),
+                valueColor: AlwaysStoppedAnimation<Color>(accent),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  over
+                      ? 'Over income by ${CurrencyUtils.formatCurrency(planned - income)}'
+                      : '${CurrencyUtils.formatCurrency(income - planned)} unallocated',
+                  style: context.styles.caption.copyWith(
+                    color: over ? context.colors.expense : null,
+                    fontWeight: over ? FontWeight.w600 : null,
+                  ),
+                ),
+                Text('of ${CurrencyUtils.formatCurrency(income)}',
+                    style: context.styles.caption),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

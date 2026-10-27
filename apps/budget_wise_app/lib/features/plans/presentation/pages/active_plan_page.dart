@@ -114,7 +114,8 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
               description: result['description'] as String?,
               expectedAmount: result['amount'] as double,
               iconIndex: result['iconIndex'] as int?,
-              recurrenceType: result['recurrenceType'] as RecurrenceType? ?? RecurrenceType.daily,
+              recurrenceType: result['recurrenceType'] as RecurrenceType? ??
+                  RecurrenceType.daily,
               isTrackingOnly: result['isTrackingOnly'] as bool? ?? false,
             ),
           );
@@ -230,7 +231,7 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:  context.colors.scaffoldBg,
+      backgroundColor: context.colors.scaffoldBg,
       body: SafeArea(
         child: BlocConsumer<ActivePlanBloc, ActivePlanState>(
           listener: _handleStateChanges,
@@ -248,7 +249,6 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
   }
 
   Widget _buildBody(BuildContext context, ActivePlanState state) {
-
     // Loading state - show spinner
     if (state.status == ActivePlanStatus.loading) {
       return _buildLoadingState();
@@ -379,7 +379,10 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
     }
 
     return Column(
-      children: items.map((item) => _buildPlanItemCard(state, item)).toList(),
+      children: items
+          .sortedForDisplay()
+          .map((item) => _buildPlanItemCard(state, item))
+          .toList(),
     );
   }
 
@@ -398,12 +401,14 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
                 color: context.colors.accentLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.category_rounded, size: 28, color: context.colors.accent),
+              child: Icon(Icons.category_rounded,
+                  size: 28, color: context.colors.accent),
             ),
             const SizedBox(height: 16),
             Text('No budget items yet', style: context.styles.bodyLarge),
             const SizedBox(height: 8),
-            Text('Add items to organize your budget', style: context.styles.bodySmall),
+            Text('Add items to organize your budget',
+                style: context.styles.bodySmall),
           ],
         ),
       ),

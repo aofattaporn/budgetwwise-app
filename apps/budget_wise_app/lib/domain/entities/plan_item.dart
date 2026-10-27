@@ -79,6 +79,10 @@ class PlanItem extends Equatable {
   /// Check if over budget
   bool get isOverBudget => !isTrackingOnly && actualAmount > expectedAmount;
 
+  /// Budget fully used up (actual >= expected). Tracking-only items never deplete.
+  bool get isDepleted =>
+      !isTrackingOnly && expectedAmount > 0 && actualAmount >= expectedAmount;
+
   /// Check if near limit (>= 85% used)
   bool get isNearLimit => !isTrackingOnly && !isOverBudget && (actualAmount / expectedAmount) >= 0.85;
 
@@ -143,6 +147,15 @@ class PlanItem extends Equatable {
         createdAt,
         updatedAt,
       ];
+}
+
+extension PlanItemListX on Iterable<PlanItem> {
+  /// Active items first, depleted ones last; each group by planned amount, largest first.
+  List<PlanItem> sortedForDisplay() => toList()
+    ..sort((a, b) {
+      if (a.isDepleted != b.isDepleted) return a.isDepleted ? 1 : -1;
+      return b.expectedAmount.compareTo(a.expectedAmount);
+    });
 }
 
 /// Status enum for plan items

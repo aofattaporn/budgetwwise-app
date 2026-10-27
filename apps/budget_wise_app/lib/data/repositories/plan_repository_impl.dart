@@ -168,6 +168,13 @@ class PlanRepositoryImpl implements PlanRepository {
 
   @override
   Future<PlanItem> updatePlanItem(PlanItem item) async {
+    // Budget changes go through revise_plan so they land in the plan history
+    // (it records nothing when the amount is unchanged).
+    await _dataSource.revisePlan(
+      item.planId,
+      {item.id: item.expectedAmount},
+      note: 'Edited ${item.name}',
+    );
     final model = PlanItemModel.fromEntity(item);
     final updated = await _dataSource.updatePlanItem(model);
     _cachedPlanItems.remove(item.planId); // Invalidate only this plan's items

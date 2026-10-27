@@ -113,7 +113,6 @@ class _PlanRevisionHistoryPageState extends State<PlanRevisionHistoryPage> {
                 plan: widget.plan,
                 revision: rev,
                 items: items,
-                isCurrent: isCurrent,
               ),
             ),
           );
@@ -131,14 +130,12 @@ class PlanRevisionDetailPage extends StatefulWidget {
   final Plan plan;
   final PlanRevision revision;
   final List<PlanItem> items;
-  final bool isCurrent;
 
   const PlanRevisionDetailPage({
     super.key,
     required this.plan,
     required this.revision,
     required this.items,
-    this.isCurrent = false,
   });
 
   @override
@@ -152,12 +149,6 @@ class _PlanRevisionDetailPageState extends State<PlanRevisionDetailPage> {
 
   Future<void> _restore() async {
     final amounts = revision.restoreAmounts(widget.items);
-    if (amounts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Current budgets already match this version'),
-      ));
-      return;
-    }
     final income = widget.plan.expectedIncome;
     if (income != null && revision.restoredTotal(widget.items) > income) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -170,8 +161,9 @@ class _PlanRevisionDetailPageState extends State<PlanRevisionDetailPage> {
     final confirmed = await ConfirmDialog.show(
       context: context,
       title: 'Restore v${revision.revisionNo}?',
-      message: 'Budgets go back to this version (${amounts.length} item(s) '
-          'change). Your current design stays in the history.',
+      message: 'Budget amounts go back to this version (${amounts.length} '
+          'item(s) change). Names, tracking settings and items added since '
+          'are kept. Your current design stays in the history.',
       confirmLabel: 'Restore',
     );
     if (!confirmed || !mounted) return;
@@ -202,12 +194,15 @@ class _PlanRevisionDetailPageState extends State<PlanRevisionDetailPage> {
   @override
   Widget build(BuildContext context) {
     final rows = revision.compareWith(widget.items);
+    // Offered whenever live budgets differ from this version — not only for
+    // older versions — so drift from edits made outside history can be undone.
+    final canRestore = revision.restoreAmounts(widget.items).isNotEmpty;
     return Scaffold(
       backgroundColor: context.colors.scaffoldBg,
       appBar: context.styles.appBar(
         title: 'Version ${revision.revisionNo}',
         actions: [
-          if (!widget.isCurrent)
+          if (canRestore)
             TextButton.icon(
               onPressed: _restoring ? null : _restore,
               icon: const Icon(Icons.restore, size: 18),

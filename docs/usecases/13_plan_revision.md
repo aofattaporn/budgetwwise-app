@@ -87,6 +87,16 @@ create policy "Authenticated full access" on public.plan_revisions
   tracking-only items exempt).
 - Status (overBudget / nearLimit ≥ 85% / noActivity / inProgress) always uses
   the **current** amounts.
+- **Every amount change is versioned.** `PlanRepositoryImpl.updatePlanItem`
+  (single-item edits) also calls `revise_plan`, so history can't drift from the
+  live plan. The RPC returns null and records nothing when no amount changes.
+- **The budget cap is enforced in the RPC as well**, not only in the UI. The
+  call raises if the total exceeds `expected_income`, but only when the total
+  grows, so an already-over plan can still be trimmed (migration
+  `revise_plan_skip_noop_and_cap`).
+- **Restore covers budget amounts only.** Names, tracking flags and items added
+  later are kept. Restore is offered on any version whose budgets differ from
+  the live plan.
 
 ### UI
 

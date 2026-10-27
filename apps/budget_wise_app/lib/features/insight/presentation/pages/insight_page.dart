@@ -121,8 +121,8 @@ class _InsightPageState extends State<InsightPage> {
           child: state.status == InsightStatus.loading ||
                   state.status == InsightStatus.initial
               ? Center(
-                  child: CircularProgressIndicator(
-                      color: context.colors.primary))
+                  child:
+                      CircularProgressIndicator(color: context.colors.primary))
               : _buildContent(state),
         ),
       ],
@@ -265,7 +265,9 @@ class _InsightPageState extends State<InsightPage> {
         child: Column(
           children: [
             _buildSummaryCards(state),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            _buildHighlights(state),
+            const SizedBox(height: 20),
             _buildPacingBanner(state),
             const SizedBox(height: 20),
             _buildInlineHeatmap(state),
@@ -311,68 +313,172 @@ class _InsightPageState extends State<InsightPage> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSummaryCards(InsightState state) {
-    return Row(
+    final net = state.netAmount;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimens.cardPadding),
+      decoration: context.styles.hero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Net this period',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${net < 0 ? '-' : ''}${CurrencyUtils.formatCurrency(net.abs())}',
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.8,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildHeroPill(
+                    'Income', state.totalIncome, Icons.arrow_upward_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildHeroPill('Expense', state.totalExpense,
+                    Icons.arrow_downward_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroPill(String label, double amount, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    CurrencyUtils.formatCurrency(amount),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KEY INSIGHTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildHighlights(InsightState state) {
+    final items = state.highlights;
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _buildSummaryCard(
-            'Income',
-            state.totalIncome,
-            context.colors.income,
-            Icons.arrow_upward_rounded,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildSummaryCard(
-            'Expense',
-            state.totalExpense,
-            context.colors.expense,
-            Icons.arrow_downward_rounded,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildSummaryCard(
-            'Net',
-            state.netAmount,
-            state.netAmount >= 0
-                ? context.colors.income
-                : context.colors.expense,
-            state.netAmount >= 0
-                ? Icons.trending_up
-                : Icons.trending_down,
+        Text('Key insights', style: context.styles.titleMedium),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 128,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (_, i) => _buildHighlightCard(items[i]),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryCard(
-      String label, double amount, Color color, IconData icon) {
+  Widget _buildHighlightCard(InsightHighlight h) {
+    final (Color color, IconData icon) = switch (h.tone) {
+      HighlightTone.good => (context.colors.income, Icons.check_circle_rounded),
+      HighlightTone.info => (context.colors.accent, Icons.lightbulb_rounded),
+      HighlightTone.warning => (
+          const Color(0xFFD97706),
+          Icons.warning_amber_rounded
+        ),
+      HighlightTone.bad => (context.colors.expense, Icons.error_rounded),
+    };
+
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: context.styles.card,
-      child: Column(
+      width: 250,
+      padding: const EdgeInsets.all(14),
+      decoration: context.styles.card.copyWith(
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
+      ),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Text(label, style: context.styles.caption),
-            ],
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: color),
           ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              CurrencyUtils.formatCurrency(amount.abs()),
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  h.title,
+                  style: context.styles.bodyLarge
+                      .copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  h.detail,
+                  style: context.styles.caption,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
@@ -475,8 +581,7 @@ class _InsightPageState extends State<InsightPage> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(99),
@@ -541,9 +646,7 @@ class _InsightPageState extends State<InsightPage> {
   /// Cumulative spending of a chosen category vs the straight "ideal pace" line
   /// (budget ÷ period days). Mirrors the report's "Food สะสม vs เส้น pace".
   Widget _buildCumulativePaceChart(InsightState state) {
-    final budgeted = state.categoryInsights
-        .where((c) => c.budget > 0)
-        .toList()
+    final budgeted = state.categoryInsights.where((c) => c.budget > 0).toList()
       ..sort((a, b) => b.actual.compareTo(a.actual));
     if (budgeted.isEmpty) return const SizedBox.shrink();
 
@@ -705,9 +808,8 @@ class _InsightPageState extends State<InsightPage> {
                         return LineTooltipItem(
                           '$date\n${isCum ? 'Spent' : 'Pace'}: ${CurrencyUtils.formatCurrency(spot.y)}',
                           TextStyle(
-                            color: isCum
-                                ? cumColor
-                                : context.colors.textSecondary,
+                            color:
+                                isCum ? cumColor : context.colors.textSecondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -778,7 +880,8 @@ class _InsightPageState extends State<InsightPage> {
 
     final dateFormat = DateFormat('M/d');
     // Show ~5 labels evenly spaced
-    final labelInterval = (daily.length / 5).ceil().toDouble().clamp(1.0, double.infinity);
+    final labelInterval =
+        (daily.length / 5).ceil().toDouble().clamp(1.0, double.infinity);
 
     return Container(
       padding: const EdgeInsets.all(AppDimens.cardPadding),
@@ -786,8 +889,7 @@ class _InsightPageState extends State<InsightPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Daily Income vs Expense',
-              style: context.styles.titleMedium),
+          Text('Daily Income vs Expense', style: context.styles.titleMedium),
           const SizedBox(height: 4),
           Text(
             '${dateFormat.format(state.periodStart)} – ${dateFormat.format(state.periodEnd)}',
@@ -872,8 +974,7 @@ class _InsightPageState extends State<InsightPage> {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: context.colors.income
-                          .withValues(alpha: 0.08),
+                      color: context.colors.income.withValues(alpha: 0.08),
                     ),
                   ),
                   // Expense line
@@ -891,8 +992,7 @@ class _InsightPageState extends State<InsightPage> {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: context.colors.expense
-                          .withValues(alpha: 0.08),
+                      color: context.colors.expense.withValues(alpha: 0.08),
                     ),
                   ),
                 ],
@@ -1004,8 +1104,7 @@ class _InsightPageState extends State<InsightPage> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: context.colors.expense.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -1030,10 +1129,9 @@ class _InsightPageState extends State<InsightPage> {
               child: LayoutBuilder(
                 builder: (_, constraints) {
                   final totalWidth = constraints.maxWidth;
-                  final maxAmount =
-                      category.actual > category.budget
-                          ? category.actual
-                          : category.budget;
+                  final maxAmount = category.actual > category.budget
+                      ? category.actual
+                      : category.budget;
                   final budgetWidth = maxAmount > 0
                       ? (category.budget / maxAmount * totalWidth)
                       : 0.0;
@@ -1145,9 +1243,8 @@ class _InsightPageState extends State<InsightPage> {
                 final budgetW = maxVal > 0
                     ? (budget / maxVal * constraints.maxWidth)
                     : constraints.maxWidth;
-                final actualW = maxVal > 0
-                    ? (actual / maxVal * constraints.maxWidth)
-                    : 0.0;
+                final actualW =
+                    maxVal > 0 ? (actual / maxVal * constraints.maxWidth) : 0.0;
 
                 return Stack(
                   children: [
@@ -1155,7 +1252,9 @@ class _InsightPageState extends State<InsightPage> {
                       width: constraints.maxWidth,
                       color: context.colors.divider,
                     ),
-                    Container(width: budgetW, color: context.colors.accent.withValues(alpha: 0.2)),
+                    Container(
+                        width: budgetW,
+                        color: context.colors.accent.withValues(alpha: 0.2)),
                     Container(
                       width: actualW,
                       color: isOver
@@ -1208,7 +1307,8 @@ class _InsightPageState extends State<InsightPage> {
               ),
               if (cat.isOverBudget)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   margin: const EdgeInsets.only(right: 6),
                   decoration: BoxDecoration(
                     color: context.colors.expense.withValues(alpha: 0.1),
@@ -1248,10 +1348,10 @@ class _InsightPageState extends State<InsightPage> {
                       if (cat.budget > 0)
                         Container(
                             width: budgetW,
-                            color: context.colors.accent.withValues(alpha: 0.15)),
+                            color:
+                                context.colors.accent.withValues(alpha: 0.15)),
                       Container(
-                          width: actualW,
-                          color: color.withValues(alpha: 0.7)),
+                          width: actualW, color: color.withValues(alpha: 0.7)),
                     ],
                   );
                 },
@@ -1264,10 +1364,9 @@ class _InsightPageState extends State<InsightPage> {
   }
 
   Widget _buildIncomeVsExpenseBar(InsightState state) {
-    final maxVal =
-        state.totalIncome > state.totalExpense
-            ? state.totalIncome
-            : state.totalExpense;
+    final maxVal = state.totalIncome > state.totalExpense
+        ? state.totalIncome
+        : state.totalExpense;
     if (maxVal == 0) return const SizedBox.shrink();
 
     return Container(

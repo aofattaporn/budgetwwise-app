@@ -35,7 +35,8 @@ class CategoryInsight extends Equatable {
   double get overAmount => actual > budget ? actual - budget : 0;
   double get remaining => budget - actual;
   bool get isOverBudget => actual > budget;
-  double get percentage => budget > 0 ? (actual / budget).clamp(0.0, double.infinity) : 0;
+  double get percentage =>
+      budget > 0 ? (actual / budget).clamp(0.0, double.infinity) : 0;
 
   @override
   List<Object?> get props => [name, budget, actual];
@@ -60,6 +61,24 @@ class DailyCategoryAmount extends Equatable {
 }
 
 enum PacingStatus { underPace, onPace, overPace }
+
+enum HighlightTone { good, info, warning, bad }
+
+/// A plain-language takeaway shown at the top of the Insight tab.
+class InsightHighlight extends Equatable {
+  final HighlightTone tone;
+  final String title;
+  final String detail;
+
+  const InsightHighlight({
+    required this.tone,
+    required this.title,
+    required this.detail,
+  });
+
+  @override
+  List<Object?> get props => [tone, title, detail];
+}
 
 /// Private key for grouping by (date, category).
 class _DayCategory {
@@ -261,7 +280,8 @@ class InsightState extends Equatable {
           : 'Uncategorized';
       final key = _DayCategory(dateKey, catName);
       final existing = map[key] ?? _DayCategoryAccum(0, 0);
-      map[key] = _DayCategoryAccum(existing.amount + txn.amount, existing.count + 1);
+      map[key] =
+          _DayCategoryAccum(existing.amount + txn.amount, existing.count + 1);
     }
 
     return map.entries
@@ -298,7 +318,8 @@ class InsightState extends Equatable {
   // ── Period pacing ──────────────────────────────────────────
 
   int get periodTotalDays {
-    final start = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final start =
+        DateTime(periodStart.year, periodStart.month, periodStart.day);
     final end = DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
     return end.difference(start).inDays + 1;
   }
@@ -306,7 +327,8 @@ class InsightState extends Equatable {
   int get periodElapsedDays {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final start = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final start =
+        DateTime(periodStart.year, periodStart.month, periodStart.day);
     final end = DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
     if (today.isBefore(start)) return 0;
     if (today.isAfter(end)) return periodTotalDays;
@@ -342,6 +364,129 @@ class InsightState extends Equatable {
     return PacingStatus.onPace;
   }
 
+  /// Projected total spend at the current daily rate, or null when it cannot
+  /// be estimated yet (no elapsed days or no spending).
+  double? get projectedExpense {
+    final elapsed = periodElapsedDays;
+    if (elapsed <= 0 || totalExpense <= 0) return null;
+    return totalExpense / elapsed * periodTotalDays;
+  }
+
+  /// Key takeaways in priority order (most urgent first).
+  List<InsightHighlight> get highlights {
+    final result = <InsightHighlight>[];
+    String pct(double v) => '${(v * 100).toStringAsFixed(0)}%';
+
+    if (totalBudget > 0) {
+      final used = pct(totalExpense / totalBudget);
+      final time = pct(periodProgressPct);
+      if (totalExpense > totalBudget) {
+        result.add(InsightHighlight(
+          tone: HighlightTone.bad,
+          title: 'Over budget',
+          detail:
+              'You are ${CurrencyUtils.formatCurrency(totalExpense - totalBudget)} over the planned total.',
+        ));
+      } else {
+        switch (pacingStatus) {
+          case PacingStatus.overPace:
+            result.add(InsightHighlight(
+              tone: HighlightTone.warning,
+              title: 'Spending ahead of pace',
+              detail: '$used of budget used with $time of the period gone.',
+            ));
+          case PacingStatus.underPace:
+            result.add(InsightHighlight(
+              tone: HighlightTone.good,
+              title: 'Spending under pace',
+              detail: '$used of budget used with $time of the period gone.',
+            ));
+          case PacingStatus.onPace:
+            result.add(InsightHighlight(
+              tone: HighlightTone.info,
+              title: 'On track',
+              detail: '$used of budget used with $time of the period gone.',
+            ));
+        }
+      }
+
+      final projected = projectedExpense;
+      if (projected != null &&
+          periodRemainingDays > 0 &&
+          totalExpense <= totalBudget) {
+        final diff = projected - totalBudget;
+        result.add(InsightHighlight(
+          tone: diff > 0 ? HighlightTone.warning : HighlightTone.good,
+          title: diff > 0
+              ? 'Projected to overspend'
+              : 'Projected to stay within budget',
+          detail: diff > 0
+              ? 'At this rate you will spend ${CurrencyUtils.formatCurrency(projected)}, ${CurrencyUtils.formatCurrency(diff)} over budget.'
+              : 'At this rate you will spend ${CurrencyUtils.formatCurrency(projected)}, leaving ${CurrencyUtils.formatCurrency(-diff)}.',
+        ));
+      }
+    }
+
+    final over = overspentCategories.where((c) => c.budget > 0).toList();
+    if (over.isNotEmpty) {
+      final names = over.take(2).map((c) => c.name).join(', ');
+      result.add(InsightHighlight(
+        tone: HighlightTone.bad,
+        title:
+            '${over.length} categor${over.length == 1 ? 'y' : 'ies'} over budget',
+        detail: over.length > 2 ? '$names and ${over.length - 2} more.' : names,
+      ));
+    }
+
+    final near = categoryInsights
+        .where((c) => c.budget > 0 && !c.isOverBudget && c.percentage >= 0.85)
+        .toList();
+    if (near.isNotEmpty) {
+      result.add(InsightHighlight(
+        tone: HighlightTone.warning,
+        title: 'Close to the limit',
+        detail: near.take(3).map((c) => c.name).join(', '),
+      ));
+    }
+
+    if (totalExpense > 0) {
+      final top = categoryInsights.where((c) => c.actual > 0).toList();
+      if (top.isNotEmpty) {
+        result.add(InsightHighlight(
+          tone: HighlightTone.info,
+          title: 'Top spend: ${top.first.name}',
+          detail:
+              '${CurrencyUtils.formatCurrency(top.first.actual)} (${pct(top.first.actual / totalExpense)} of expenses).',
+        ));
+      }
+    }
+
+    if (activeDaysWithExpense >= 3) {
+      final totals = dowExpenseTotals;
+      var peak = 0;
+      for (var i = 1; i < 7; i++) {
+        if (totals[i] > totals[peak]) peak = i;
+      }
+      const days = [
+        'Sundays',
+        'Mondays',
+        'Tuesdays',
+        'Wednesdays',
+        'Thursdays',
+        'Fridays',
+        'Saturdays',
+      ];
+      result.add(InsightHighlight(
+        tone: HighlightTone.info,
+        title: 'You spend most on ${days[peak]}',
+        detail:
+            '${pct(totals[peak] / totalExpense)} of expenses land on that day.',
+      ));
+    }
+
+    return result;
+  }
+
   InsightState copyWith({
     InsightStatus? status,
     List<Plan>? allPlans,
@@ -364,6 +509,13 @@ class InsightState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, allPlans, selectedPlanIndex, transactions, activePlan, planItems, errorMessage];
+  List<Object?> get props => [
+        status,
+        allPlans,
+        selectedPlanIndex,
+        transactions,
+        activePlan,
+        planItems,
+        errorMessage
+      ];
 }

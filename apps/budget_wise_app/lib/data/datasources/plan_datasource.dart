@@ -1,5 +1,6 @@
 import '../models/plan_model.dart';
 import '../models/plan_item_model.dart';
+import '../models/plan_revision_model.dart';
 
 /// Plan data source interface
 /// Implemented by Supabase data sources
@@ -62,4 +63,16 @@ abstract class PlanDataSource {
 
   /// Get total actual income for a plan
   Future<double> getActualIncome(String planId);
+
+  /// Get all recorded versions of a plan's design, oldest first
+  Future<List<PlanRevisionModel>> getPlanRevisions(String planId);
+
+  /// Apply new item amounts ({itemId: amount}) and record a revision.
+  /// Returns the new revision number, or null when none was recorded
+  /// (plan has no transactions yet, so amounts were overwritten in place).
+  Future<int?> revisePlan(
+    String planId,
+    Map<String, double> amounts, {
+    String? note,
+  });
 }

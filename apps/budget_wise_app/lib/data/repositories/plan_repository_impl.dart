@@ -1,5 +1,6 @@
 import '../../domain/entities/plan.dart';
 import '../../domain/entities/plan_item.dart';
+import '../../domain/entities/plan_revision.dart';
 import '../../domain/repositories/plan_repository.dart';
 import '../datasources/plan_datasource.dart';
 import '../models/plan_model.dart';
@@ -194,5 +195,22 @@ class PlanRepositoryImpl implements PlanRepository {
     _cachedActualIncome[planId] = income;
     _lastFetch = DateTime.now();
     return income;
+  }
+
+  @override
+  Future<List<PlanRevision>> getPlanRevisions(String planId) async {
+    final models = await _dataSource.getPlanRevisions(planId);
+    return models.map((m) => m.toEntity()).toList();
+  }
+
+  @override
+  Future<int?> revisePlan(
+    String planId,
+    Map<String, double> amounts, {
+    String? note,
+  }) async {
+    final revision = await _dataSource.revisePlan(planId, amounts, note: note);
+    _cachedPlanItems.remove(planId);
+    return revision;
   }
 }

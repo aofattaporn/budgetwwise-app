@@ -13,6 +13,8 @@ import 'plan_editor_page.dart';
 import 'plan_item_detail_page.dart';
 import 'plan_item_editor_page.dart';
 import 'plan_list_page.dart';
+import 'plan_revision_history_page.dart';
+import 'revise_plan_page.dart';
 
 /// Active Plan Page - Main screen for viewing and managing the active budget plan
 ///
@@ -203,6 +205,24 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
     );
   }
 
+  Future<void> _navigateToRevisePlan(ActivePlanState state) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) =>
+            RevisePlanPage(plan: state.plan!, items: state.planItems),
+      ),
+    );
+    if (changed == true && mounted) _refreshActivePlan();
+  }
+
+  Future<void> _navigateToPlanHistory(Plan plan) async {
+    final restored = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => PlanRevisionHistoryPage(plan: plan)),
+    );
+    if (restored == true && mounted) _refreshActivePlan();
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // BUILD - MAIN
   // ═══════════════════════════════════════════════════════════════════════════
@@ -315,6 +335,27 @@ class _ActivePlanPageState extends State<ActivePlanPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('Budget Items', style: context.styles.titleMedium),
+        const Spacer(),
+        IconButton(
+          tooltip: 'Plan history',
+          icon: const Icon(Icons.history, size: 20),
+          color: context.colors.textSecondary,
+          onPressed: () {
+            final state = context.read<ActivePlanBloc>().state;
+            if (state.plan != null) _navigateToPlanHistory(state.plan!);
+          },
+        ),
+        TextButton.icon(
+          onPressed: () {
+            final state = context.read<ActivePlanBloc>().state;
+            if (state.plan != null && state.planItems.isNotEmpty) {
+              _navigateToRevisePlan(state);
+            }
+          },
+          icon: const Icon(Icons.tune, size: 16),
+          label: const Text('Revise'),
+          style: TextButton.styleFrom(foregroundColor: context.colors.accent),
+        ),
         TextButton.icon(
           onPressed: () {
             final state = context.read<ActivePlanBloc>().state;

@@ -1,5 +1,6 @@
 import '../entities/plan.dart';
 import '../entities/plan_item.dart';
+import '../entities/plan_revision.dart';
 
 /// Repository interface for Plan operations
 abstract class PlanRepository {
@@ -61,6 +62,17 @@ abstract class PlanRepository {
 
   /// Get total actual income for a plan
   Future<double> getActualIncome(String planId);
+
+  /// Get all recorded versions of a plan's design, oldest first
+  Future<List<PlanRevision>> getPlanRevisions(String planId);
+
+  /// Apply new item amounts ({itemId: amount}) and record a revision.
+  /// Returns the new revision number, or null when none was recorded.
+  Future<int?> revisePlan(
+    String planId,
+    Map<String, double> amounts, {
+    String? note,
+  });
 
   /// Invalidate any cached data so next fetch is fresh
   void invalidateCache();

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../plan_datasource.dart';
 import '../../models/plan_model.dart';
 import '../../models/plan_item_model.dart';
+import '../../models/plan_revision_model.dart';
 
 /// Supabase implementation of PlanDataSource
 class PlanSupabaseDataSource implements PlanDataSource {
@@ -263,5 +264,33 @@ class PlanSupabaseDataSource implements PlanDataSource {
     } catch (e) {
       throw Exception('Failed to get actual income: $e');
     }
+  }
+
+  @override
+  Future<List<PlanRevisionModel>> getPlanRevisions(String planId) async {
+    final response = await _client
+        .from('plan_revisions')
+        .select()
+        .eq('plan_id', planId)
+        .order('revision_no', ascending: true); // postgrest defaults to desc
+    return (response as List)
+        .map((json) => PlanRevisionModel.fromJson(json))
+        .toList();
+  }
+
+  @override
+  Future<int?> revisePlan(
+    String planId,
+    Map<String, double> amounts, {
+    String? note,
+  }) async {
+    // Snapshot + update run in one DB function so a failure can't leave the
+    // amounts changed without the history row (or vice versa).
+    final result = await _client.rpc('revise_plan', params: {
+      'p_plan_id': planId,
+      'p_amounts': amounts,
+      'p_note': note,
+    });
+    return result as int?;
   }
 }

@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgetwise_design_system/budgetwise_design_system.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/app_config.dart';
 import 'core/theme/theme_provider.dart';
@@ -11,8 +13,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.initialize();
   await configureDependencies();
+  if (kDebugMode) await _devAutoSignIn();
 
   runApp(const ProviderScope(child: BudgetWiseApp()));
+}
+
+/// Debug-only: signs in with DEV_EMAIL / DEV_PASSWORD from `.env` so local
+/// runs skip the login page. Falls back to the login page if unset or failing.
+Future<void> _devAutoSignIn() async {
+  final email = AppConfig.get('DEV_EMAIL');
+  final password = AppConfig.get('DEV_PASSWORD');
+  final auth = Supabase.instance.client.auth;
+  if (email.isEmpty || password.isEmpty || auth.currentSession != null) return;
+  try {
+    await auth.signInWithPassword(email: email, password: password);
+  } catch (e) {
+    debugPrint('Dev auto sign-in failed: $e');
+  }
 }
 
 class BudgetWiseApp extends ConsumerWidget {

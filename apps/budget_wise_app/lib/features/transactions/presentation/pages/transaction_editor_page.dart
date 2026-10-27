@@ -527,6 +527,11 @@ class _TransactionEditorPageState extends State<TransactionEditorPage> {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(state.occurredAt),
+      initialEntryMode: TimePickerEntryMode.inputOnly,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
     );
     if (time != null && mounted) {
       context
